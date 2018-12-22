@@ -236,7 +236,7 @@ exports.getType = function (collection, property, driver) {
 			property.type = "number";
 			property.serial = true;
 			property.key = true;
-			type = "INT(11)";
+			type = `INT(${property.size || 11})`;
 			break;
 		case "boolean":
 			type = "TINYINT(1)";

@@ -79,12 +79,25 @@ describe("MySQL.getType", function () {
 	});
 
 	it("should detect serial", function (done) {
-		var column = Dialect.getType(null, { mapsTo: 'abc', type: "serial" }).value;
+		;[
+			undefined,
+			null,
+			0,
+			11,
+			20
+		].forEach(size => {
+			var column
+			if (size = undefined)
+				column = Dialect.getType(null, { mapsTo: 'abc', type: "serial" }).value;
+			else
+				column = Dialect.getType(null, { mapsTo: 'abc', type: "serial", size }).value;
 
-		column.should.match(/INT/);
-		column.should.match(/NOT NULL/);
-		column.should.match(/AUTO_INCREMENT/);
-
+			column.should.match(new RegExp(`INT\\\(${size || 11}\\\)`));
+			column.should.match(/INT/);
+			column.should.match(/NOT NULL/);
+			column.should.match(/AUTO_INCREMENT/);
+		})
+		
 		return done();
 	});
 });
