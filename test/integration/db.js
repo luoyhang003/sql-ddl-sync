@@ -8,7 +8,7 @@ var Sync = require('../../').Sync;
 var sync    = new Sync({
 	driver  : common.driver,
 	debug   : function (text) {
-		 //console.log("> %s", text);
+		// console.log("> %s", text);
 	}
 });
 

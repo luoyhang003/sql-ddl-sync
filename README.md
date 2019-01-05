@@ -31,7 +31,7 @@ and run the code again. Your table should always return to the same structure.
 ```js
 var ORM   = require("@fxjs/orm");
 var mysql = require("mysql");
-var Sync  = require("sql-ddl-sync").Sync;
+var Sync  = require("@fxjs/sql-ddl-sync").Sync;
 
 ORM.connect("mysql://username:password@localhost/database", function (err, db) {
 	if (err) throw err;

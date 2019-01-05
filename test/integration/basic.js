@@ -18,11 +18,41 @@ describe("index", function () {
 
   describe("#dialect", function () {
     ['mysql', /* 'postgresql', */ 'sqlite'].forEach(function (dialectName) {
-      it("should expose " + dialectName + " dialect", function () {
+      describe("should expose " + dialectName + " dialect", function () {
         var dialect = index.dialect(dialectName);
 
-        assert.exist(dialect);
-        console.log(dialect);
+        it(`dialect ${dialectName} exists`, () => {
+          assert.exist(dialect);
+        })
+        ;[
+          'hasCollection',
+          'addPrimaryKey',
+          'dropPrimaryKey',
+          'addForeignKey',
+          'dropForeignKey',
+          'getCollectionProperties',
+          'createCollection',
+          'dropCollection',
+          'addCollectionColumn',
+          'renameCollectionColumn',
+          'modifyCollectionColumn',
+          'dropCollectionColumn',
+          'getCollectionIndexes',
+          'addIndex',
+          'removeIndex',
+          'getType',
+        ]
+        .concat(
+          dialectName === 'sqlite' ? [
+            'processKeys',
+            'supportsType'
+          ] : []
+        )
+        .forEach(dialect_func => {
+          it(`should be function: ${dialect_func}`, () => {
+            assert.isFunction(dialect[dialect_func])
+          })
+        })
       });
     });
   });

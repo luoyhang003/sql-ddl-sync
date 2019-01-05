@@ -1,15 +1,16 @@
-var Queue = require("./Queue").Queue;
-var noOp  = function () {};
-var util  = require('util')
+/// <reference path="../@types/index.d.ts" />
 
-exports.Sync = Sync;
+import { Queue } from './Queue';
+import util  = require('util')
 
-exports.dialect = function (name) {
+const noOp: Function = function () {};
+
+export function dialect (name: string): FxOrmSqlDDLSync__Dialect.Dialect {
 	return require("./Dialects/" + name);
 }
 
-function Sync(options) {
-	var debug       = options.debug || noOp;
+export function Sync(options: FxOrmSqlDDLSync.SyncOptions) {
+	var debug 		= (options.debug || noOp) as Function;
 	var driver      = options.driver;
 	var Dialect     = require("./Dialects/" + driver.dialect);
 	var suppressColumnDrop = options.suppressColumnDrop;
@@ -101,7 +102,7 @@ function Sync(options) {
 		return nextBefore();
 	};
 
-	var createColumn = function (collection, prop) {
+	var createColumn = function (collection, prop): false | FxOrmSqlDDLSync__Column.OpResult__CreateColumn {
 		var type;
 
 		if (types.hasOwnProperty(prop.type)) {
@@ -146,7 +147,7 @@ function Sync(options) {
 				total_changes += 1;
 
 				if (col.before) {
-					queue.add(col, function (col, next) {
+					queue.add(col, function (col: FxOrmSqlDDLSync__Column.OpResult__CreateColumn, next) {
 						col.before(driver, function (err) {
 							if (err) {
 								return next(err);
@@ -156,11 +157,11 @@ function Sync(options) {
 					});
 				} else {
 					queue.add(function (next) {
-						return Dialect.addCollectionColumn(driver, collection.name, col.value, last_k, next);
+						return Dialect.addCollectionColumn(driver, collection.name, (col as FxOrmSqlDDLSync__Column.OpResult__CreateColumn).value, last_k, next);
 					});
 				}
 			} else if (needToSync(collection.properties[k], columns[k])) {
-				var col = createColumn(collection.name, k, collection.properties[k]);
+				var col = createColumn(collection.name, k/* collection.properties[k] */);
 
 				if (col === false) {
 					return cb(new Error("Unknown type for property '" + k + "'"));
@@ -171,7 +172,7 @@ function Sync(options) {
 				total_changes += 1;
 
 				if (col.before) {
-					queue.add(col, function (col, next) {
+					queue.add(col, function (col: FxOrmSqlDDLSync__Column.OpResult__CreateColumn, next) {
 						col.before(driver, function (err) {
 							if (err) {
 								return next(err);
@@ -181,7 +182,7 @@ function Sync(options) {
 					});
 				} else {
 					queue.add(function (next) {
-						return Dialect.modifyCollectionColumn(driver, collection.name, col.value, next);
+						return Dialect.modifyCollectionColumn(driver, collection.name, (col as FxOrmSqlDDLSync__Column.OpResult__CreateColumn).value, next);
 					});
 				}
 			}
@@ -310,7 +311,7 @@ function Sync(options) {
 
 			var queue = new Queue(cb);
 
-			for (var i = 0; i < indexes.length; i++) {
+			for (let i = 0; i < indexes.length; i++) {
 				if (!db_indexes.hasOwnProperty(indexes[i].name)) {
 					debug("Adding index " + name + "." + indexes[i].name + " (" + indexes[i].columns.join(", ") + ")");
 
@@ -335,12 +336,12 @@ function Sync(options) {
 				delete db_indexes[indexes[i].name];
 			}
 
-			for (var i in db_indexes) {
-				debug("Removing index " + name + "." + i);
+			for (let idx in db_indexes) {
+				debug("Removing index " + name + "." + idx);
 
 				total_changes += 1;
 
-				queue.add(i, function (index, next) {
+				queue.add(idx, function (index, next) {
 					return Dialect.removeIndex(driver, index, name, next);
 				});
 			}

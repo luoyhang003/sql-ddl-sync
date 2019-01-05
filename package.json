@@ -13,6 +13,7 @@
 	],
 	"license": "MIT",
 	"repository": "http://github.com/fxjs-modules/sql-ddl-sync.git",
+	"types": "@types/index.d.ts",
 	"main": "./lib",
 	"scripts": {
 		"build": "fib-typify src -o lib",
@@ -27,14 +28,15 @@
 	},
 	"analyse": false,
 	"dependencies": {
-		"fib-typify": "^0.4.1",
-		"should": "^13.2.3"
+		"@fxjs/sql-query": "0.0.2"
 	},
 	"devDependencies": {
 		"@fibjs/ci": "^2.1.0",
 		"@fxjs/orm": "^1.6.10",
 		"@types/fibjs": "^0.26.5",
-		"cross-env": "^5.2.0"
+		"cross-env": "^5.2.0",
+		"fib-typify": "^0.5.0",
+		"should": "^13.2.3"
 	},
 	"ci": {
 		"type": "travis, appveyor",

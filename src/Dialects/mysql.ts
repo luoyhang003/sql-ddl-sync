@@ -1,47 +1,60 @@
-var SQL  = require("../SQL");
-var util = require("util");
+/// <reference path="../../@types/index.d.ts" />
+
+import SQL = require("../SQL");
 
 var columnSizes = {
-	integer:  { 2: 'SMALLINT', 4: 'INTEGER', 8: 'BIGINT' },
-	floating: {                4: 'FLOAT',   8: 'DOUBLE' }
+	integer: { 2: 'SMALLINT', 4: 'INTEGER', 8: 'BIGINT' },
+	floating: { 4: 'FLOAT', 8: 'DOUBLE' }
 };
 
-exports.hasCollection = function (driver, name, cb) {
-	driver.execQuery("SHOW TABLES LIKE ?", [ name ], function (err, rows) {
+export const hasCollection: FxOrmSqlDDLSync__Dialect.Dialect['hasCollection'] = function (
+	driver, name, cb
+) {
+	driver.execQuery("SHOW TABLES LIKE ?", [name], function (err, rows) {
 		if (err) return cb(err);
 
 		return cb(null, rows.length > 0);
 	});
 };
 
-exports.addPrimaryKey = function(driver, tableName, columnName, cb){
-  var sql = "ALTER TABLE ?? ADD CONSTRAINT ?? PRIMARY KEY(??);"
-  return driver.execQuery(sql, [tableName, columnName + "PK", columnName] , cb);
+export const addPrimaryKey: FxOrmSqlDDLSync__Dialect.Dialect['addPrimaryKey'] = function (
+	driver, tableName, columnName, cb
+) {
+	var sql = "ALTER TABLE ?? ADD CONSTRAINT ?? PRIMARY KEY(??);"
+	return driver.execQuery(sql, [tableName, columnName + "PK", columnName], cb);
 };
 
-exports.dropPrimaryKey = function(driver, tableName, columnName, cb){
-  var sql = "ALTER TABLE ?? DROP PRIMARY KEY;";
-  return driver.execQuery(sql, [tableName], cb);
+export const dropPrimaryKey: FxOrmSqlDDLSync__Dialect.Dialect['dropPrimaryKey'] = function (
+	driver, tableName, columnName, cb
+) {
+	var sql = "ALTER TABLE ?? DROP PRIMARY KEY;";
+	return driver.execQuery(sql, [tableName], cb);
 };
 
-exports.addForeignKey = function(driver, tableName, options, cb){
-  var sql = " ALTER TABLE ?? ADD CONSTRAINT ?? FOREIGN KEY(??) REFERENCES ??(??)";
-  return driver.execQuery(sql, [tableName, options.name + "_fk", options.name, options.references.table, options.references.column], cb);
+export const addForeignKey: FxOrmSqlDDLSync__Dialect.Dialect['addForeignKey'] = function (
+	driver, tableName, options, cb
+) {
+	var sql = " ALTER TABLE ?? ADD CONSTRAINT ?? FOREIGN KEY(??) REFERENCES ??(??)";
+	return driver.execQuery(sql, [tableName, options.name + "_fk", options.name, options.references.table, options.references.column], cb);
 };
 
-exports.dropForeignKey = function(driver, tableName, columnName, cb){
-  var sql = "ALTER TABLE " + tableName + " DROP FOREIGN KEY "+ columnName + "_fk;";
-  return driver.execQuery(sql, [tableName, columnName + '_fk'], cb);
+export const dropForeignKey: FxOrmSqlDDLSync__Dialect.Dialect['dropForeignKey'] = function (
+	driver, tableName, columnName, cb
+) {
+	var sql = "ALTER TABLE " + tableName + " DROP FOREIGN KEY " + columnName + "_fk;";
+	return driver.execQuery(sql, [tableName, columnName + '_fk'], cb);
 };
 
-exports.getCollectionProperties = function (driver, name, cb) {
-	driver.execQuery("SHOW COLUMNS FROM ??", [ name ], function (err, cols) {
+export const getCollectionProperties: FxOrmSqlDDLSync__Dialect.Dialect['getCollectionProperties'] = function (
+	driver, name, cb
+) {
+	driver.execQuery("SHOW COLUMNS FROM ??", [name], function (err, cols: FxOrmSqlDDLSync__Column.PropertyDescriptor__MySQL[]) {
 		if (err) return cb(err);
 
-		var columns = {}, m;
+		var columns = <{ [col: string]: FxOrmSqlDDLSync__Column.Property }>{}, m;
 
 		for (var i = 0; i < cols.length; i++) {
-			var column = {};
+			var column = <FxOrmSqlDDLSync__Column.Property>{};
 
 			if (cols[i].Type.indexOf(" ") > 0) {
 				cols[i].SubType = cols[i].Type.substr(cols[i].Type.indexOf(" ") + 1).split(/\s+/);
@@ -139,48 +152,62 @@ exports.getCollectionProperties = function (driver, name, cb) {
 	});
 };
 
-exports.createCollection = function (driver, name, columns, keys, cb) {
+export const createCollection: FxOrmSqlDDLSync__Dialect.Dialect['createCollection'] = function (
+	driver, name, columns, keys, cb
+) {
 	return driver.execQuery(SQL.CREATE_TABLE({
-		name    : name,
-		columns : columns,
-		keys    : keys
+		name: name,
+		columns: columns,
+		keys: keys
 	}, driver), cb);
 };
 
-exports.dropCollection = function (driver, name, cb) {
+export const dropCollection: FxOrmSqlDDLSync__Dialect.Dialect['dropCollection'] = function (
+	driver, name, cb
+) {
 	return driver.execQuery(SQL.DROP_TABLE({
-		name    : name
+		name: name
 	}, driver), cb);
 };
 
-exports.addCollectionColumn = function (driver, name, column, after_column, cb) {
+export const addCollectionColumn: FxOrmSqlDDLSync__Dialect.Dialect['addCollectionColumn'] = function (
+	driver, name, column, after_column, cb
+) {
 	return driver.execQuery(SQL.ALTER_TABLE_ADD_COLUMN({
-		name   : name,
-		column : column,
-		after  : after_column,
-		first  : !after_column
+		name: name,
+		column: column,
+		after: after_column,
+		first: !after_column
 	}, driver), cb);
 };
 
-exports.renameCollectionColumn = function (driver, name, oldColName, newColName, cb) {
+export const renameCollectionColumn: FxOrmSqlDDLSync__Dialect.Dialect['renameCollectionColumn'] = function (
+	driver, name, oldColName, newColName, cb
+) {
 	return cb("MySQL doesn't support simple column rename");
 };
 
-exports.modifyCollectionColumn = function (driver, name, column, cb) {
+export const modifyCollectionColumn: FxOrmSqlDDLSync__Dialect.Dialect['modifyCollectionColumn'] = function (
+	driver, name, column, cb
+) {
 	return driver.execQuery(SQL.ALTER_TABLE_MODIFY_COLUMN({
-		name        : name,
-		column      : column
+		name: name,
+		column: column
 	}, driver), cb);
 };
 
-exports.dropCollectionColumn = function (driver, name, column, cb) {
+export const dropCollectionColumn: FxOrmSqlDDLSync__Dialect.Dialect['dropCollectionColumn'] = function (
+	driver, name, column, cb
+) {
 	return driver.execQuery(SQL.ALTER_TABLE_DROP_COLUMN({
-		name        : name,
-		column      : column
+		name: name,
+		column: column
 	}, driver), cb);
 };
 
-exports.getCollectionIndexes = function (driver, name, cb) {
+export const getCollectionIndexes: FxOrmSqlDDLSync__Dialect.Dialect['getCollectionIndexes'] = function (
+	driver, name, cb
+) {
 	var q = "";
 	q += "SELECT index_name, column_name, non_unique ";
 	q += "FROM information_schema.statistics ";
@@ -193,24 +220,28 @@ exports.getCollectionIndexes = function (driver, name, cb) {
 	});
 };
 
-exports.addIndex = function (driver, indexName, unique, collection, columns, cb) {
+export const addIndex: FxOrmSqlDDLSync__Dialect.Dialect['addIndex'] = function (
+	driver, indexName, unique, collection, columns, cb
+) {
 	return driver.execQuery(SQL.CREATE_INDEX({
-		name       : indexName,
-		unique     : unique,
-		collection : collection,
-		columns    : columns
+		name: indexName,
+		unique: unique,
+		collection: collection,
+		columns: columns
 	}, driver), cb);
 };
 
-exports.removeIndex = function (driver, collection, name, cb) {
+export const removeIndex: FxOrmSqlDDLSync__Dialect.Dialect['removeIndex'] = function (
+	driver, collection, name, cb
+) {
 	return driver.execQuery(SQL.DROP_INDEX({
-		name       : name,
-		collection : collection
+		name: name,
+		collection: collection
 	}, driver), cb);
 };
 
-exports.getType = function (collection, property, driver) {
-	var type       = false;
+export const getType: FxOrmSqlDDLSync__Dialect.Dialect['getType'] = function (collection, property, driver) {
+	var type: false | FxOrmSqlDDLSync__Column.ColumnType_MySQL = false;
 	var customType = null;
 
 	if (property.type == 'number' && property.rational === false) {
@@ -223,7 +254,7 @@ exports.getType = function (collection, property, driver) {
 			if (property.big) {
 				type = "LONGTEXT";
 			} else {
-				type = "VARCHAR(" + Math.min(Math.max(parseInt(property.size, 10) || 255, 1), 65535) + ")";
+				type = "VARCHAR(" + Math.min(Math.max(parseInt(property.size as any, 10) || 255, 1), 65535) + ")";
 			}
 			break;
 		case "integer":
@@ -257,7 +288,7 @@ exports.getType = function (collection, property, driver) {
 			}
 			break;
 		case "enum":
-			type = "ENUM (" + property.values.map(driver.query.escapeVal) + ")";
+			type = "ENUM (" + property.values.map((val: any) => driver.query.escapeVal(val)) + ")";
 			break;
 		case "point":
 			type = "POINT";
@@ -286,12 +317,12 @@ exports.getType = function (collection, property, driver) {
 	}
 
 	return {
-		value  : type,
-		before : false
+		value: type,
+		before: false
 	};
 };
 
-function convertIndexRows(rows) {
+function convertIndexRows(rows: FxOrmSqlDDLSync__Driver.IndexRow_MySQL[]) {
 	var indexes = {};
 
 	for (var i = 0; i < rows.length; i++) {
@@ -300,8 +331,8 @@ function convertIndexRows(rows) {
 		}
 		if (!indexes.hasOwnProperty(rows[i].index_name)) {
 			indexes[rows[i].index_name] = {
-				columns : [],
-				unique  : (rows[i].non_unique == 0)
+				columns: [],
+				unique: (rows[i].non_unique == 0)
 			};
 		}
 
@@ -309,56 +340,4 @@ function convertIndexRows(rows) {
 	}
 
 	return indexes;
-}
-
-function bufferToString(buffer) {
-	var hex = '';
-
-	try {
-		hex = buffer.toString('hex');
-	} catch (err) {
-		// node v0.4.x does not support hex / throws unknown encoding error
-		for (var i = 0; i < buffer.length; i++) {
-			var b = buffer[i];
-			hex += zeroPad(b.toString(16));
-		}
-	}
-
-	return "X'" + hex+ "'";
-}
-
-function dateToString(date, timeZone) {
-	var dt = new Date(date);
-
-	if (timeZone != 'local') {
-		var tz = convertTimezone(timeZone);
-
-		dt.setTime(dt.getTime() + (dt.getTimezoneOffset() * 60000));
-		if (tz !== false) {
-			dt.setTime(dt.getTime() + (tz * 60000));
-		}
-	}
-
-	var year   = dt.getFullYear();
-	var month  = zeroPad(dt.getMonth() + 1);
-	var day    = zeroPad(dt.getDate());
-	var hour   = zeroPad(dt.getHours());
-	var minute = zeroPad(dt.getMinutes());
-	var second = zeroPad(dt.getSeconds());
-
-	return year + '-' + month + '-' + day + ' ' + hour + ':' + minute + ':' + second;
-}
-
-function zeroPad(number) {
-	return (number < 10) ? '0' + number : number;
-}
-
-function convertTimezone(tz) {
-	if (tz == "Z") return 0;
-
-	var m = tz.match(/([\+\-\s])(\d\d):?(\d\d)?/);
-	if (m) {
-		return (m[1] == '-' ? -1 : 1) * (parseInt(m[2], 10) + ((m[3] ? parseInt(m[3], 10) : 0) / 60)) * 60;
-	}
-	return false;
 }
