@@ -1,6 +1,15 @@
 /// <reference types="@fxjs/sql-query" />
+/// <reference path="_common.d.ts" />
 
 declare namespace FxOrmSqlDDLSync__Driver {
+    interface CustomPropertyType {
+        datastoreType(prop?): string
+        valueToProperty?(value?, prop?)
+        propertyToValue?(value?, prop?)
+
+        [ext_cfg_name: string]: any
+    }
+
     interface DriverConfig {
         database: string
 
@@ -27,15 +36,15 @@ declare namespace FxOrmSqlDDLSync__Driver {
          * @description base query
          */
         execSimpleQuery: {
-            <T = any>(query_language: string, cb: FxOrmSqlDDLSync.ExecutionCallback<T>)
+            <T = any>(query_string: string, cb: FxOrmSqlDDLSync.ExecutionCallback<T>)
         }
         
         /**
          * @description do query
          */
         execQuery: {
-            <T = any>(query_language: string, cb: FxOrmSqlDDLSync.ExecutionCallback<T>)
-            <T = any>(query_language: string, query_args: object, cb: FxOrmSqlDDLSync.ExecutionCallback<T>)
+            <T = any>(query_string: string, cb: FxOrmSqlDDLSync.ExecutionCallback<T>)
+            <T = any>(query_string: string, query_args: object, cb: FxOrmSqlDDLSync.ExecutionCallback<T>)
         }
         
         /**
@@ -46,7 +55,7 @@ declare namespace FxOrmSqlDDLSync__Driver {
         }
 
         customTypes: {
-            [type_name: string]: any
+            [type_name: string]: CustomPropertyType
         }
     }
 

@@ -3,6 +3,6 @@ declare namespace FxOrmSqlDDLSync {
     type ColumnName = string
 
     interface ExecutionCallback<T> {
-        (err: string|Error|null, result?: T): any
+        (err?: Error|null, result?: T): any
     }
 }

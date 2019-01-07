@@ -28,7 +28,7 @@
 	},
 	"analyse": false,
 	"dependencies": {
-		"@fxjs/sql-query": "0.0.3"
+		"@fxjs/sql-query": "^0.1.0"
 	},
 	"devDependencies": {
 		"@fibjs/ci": "^2.1.0",

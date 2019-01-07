@@ -184,7 +184,7 @@ export const addCollectionColumn: FxOrmSqlDDLSync__Dialect.Dialect['addCollectio
 export const renameCollectionColumn: FxOrmSqlDDLSync__Dialect.Dialect['renameCollectionColumn'] = function (
 	driver, name, oldColName, newColName, cb
 ) {
-	return cb("MySQL doesn't support simple column rename");
+	return cb(new Error("MySQL doesn't support simple column rename"));
 };
 
 export const modifyCollectionColumn: FxOrmSqlDDLSync__Dialect.Dialect['modifyCollectionColumn'] = function (
@@ -242,7 +242,7 @@ export const removeIndex: FxOrmSqlDDLSync__Dialect.Dialect['removeIndex'] = func
 
 export const getType: FxOrmSqlDDLSync__Dialect.Dialect['getType'] = function (collection, property, driver) {
 	var type: false | FxOrmSqlDDLSync__Column.ColumnType_MySQL = false;
-	var customType = null;
+	var customType: FxOrmSqlDDLSync__Driver.CustomPropertyType = null;
 
 	if (property.type == 'number' && property.rational === false) {
 		property.type = 'integer';

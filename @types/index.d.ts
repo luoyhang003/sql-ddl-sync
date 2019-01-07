@@ -8,17 +8,17 @@
 
 declare namespace FxOrmSqlDDLSync {
     interface SyncOptions {
-        debug: Function | boolean
         driver: {
             dialect: FxSqlQueryDialect.DialectType
             [ext_cfg: string]: any
         }
-        suppressColumnDrop: boolean
+        debug?: Function | boolean
+        suppressColumnDrop?: boolean
     }
     interface SyncInstance {
         defineCollection(collection, properties): SyncInstance
-        defineType(type, proto): SyncInstance
-        sync(cb): any
+        defineType(type: string, proto: FxOrmSqlDDLSync__Driver.CustomPropertyType): SyncInstance
+        sync<T=any>(cb?: FxOrmSqlDDLSync.ExecutionCallback<T>): any
     }
 
     interface ExportModule {
@@ -28,4 +28,9 @@ declare namespace FxOrmSqlDDLSync {
             (options: SyncOptions): SyncInstance
         }
     }
+}
+
+declare module "@fxjs/sql-ddl-sync" {
+    const mod: FxOrmSqlDDLSync.ExportModule
+    export = mod
 }
