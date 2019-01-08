@@ -55,6 +55,7 @@ export const getCollectionProperties: FxOrmSqlDDLSync__Dialect.Dialect['getColle
 
 		for (var i = 0; i < cols.length; i++) {
 			var column = <FxOrmSqlDDLSync__Column.Property>{};
+			colInfoBuffer2Str(cols[i]);
 
 			if (cols[i].Type.indexOf(" ") > 0) {
 				cols[i].SubType = cols[i].Type.substr(cols[i].Type.indexOf(" ") + 1).split(/\s+/);
@@ -340,4 +341,13 @@ function convertIndexRows(rows: FxOrmSqlDDLSync__Driver.IndexRow_MySQL[]) {
 	}
 
 	return indexes;
+}
+
+function colInfoBuffer2Str (col) {
+	col.Type += '';
+	col.Size += '';
+	col.Extra += '';
+	col.Key += '';
+	col.Null += '';
+	col.Default += '';
 }
