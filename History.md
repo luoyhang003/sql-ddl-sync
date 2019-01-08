@@ -1,7 +1,17 @@
 
-v0.1.0 / 2019-01-08
+v0.1.1 / 2019-01-09
 ==================
 
+  * add types; add `forceSync`; fix some bugs.
+  * refactor index.ts
+  * make test cases corresponding to real modules.
+  * upgrade core dependency.
+  * update .npmignore, add script for hooking publish.
+
+v0.1.0 / 2019-01-08
+===================
+
+  * Release v0.1.0
   * build next version typo.
   * upgrade dependency.
   * add types.
