@@ -24,7 +24,7 @@ declare namespace FxOrmSqlDDLSync__SQL {
         after?: string|false
     }
 
-    interface AlertColumnOptions extends TableColumnOptionsBase {
+    interface AlterColumnOptions extends TableColumnOptionsBase {
         // column name
         column: string
     }

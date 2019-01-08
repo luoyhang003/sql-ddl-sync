@@ -5,12 +5,10 @@ declare namespace FxOrmSqlDDLSync__Column {
     type StringType<ENUM_T = string> = string | ENUM_T
     type ColumnType = StringType
 
-    interface ColumnInfo {
-        type: ColumnType
-        required: boolean
-        defaultValue?: any
-        size?: number
-        values: any[]
+    type ColumnInfo = Property
+
+    interface ColumnInfoHash {
+        [col: string]: FxOrmSqlDDLSync__Column.ColumnInfo
     }
 
     type PropertyType = StringType<'text' | 'integer' | 'number' | 'serial' | 'boolean' | 'date' | 'binary' | 'object' | 'enum' | 'point'>
@@ -56,26 +54,25 @@ declare namespace FxOrmSqlDDLSync__Column {
     }
 
     interface Property {
-        serial: boolean
-        unsigned: boolean
-        primary: boolean
-        required: boolean
-        defaultValue: any
         type: string
 
-        /* extra option :start */
-        size: number | string
-        // whether float type
-        rational: boolean
-        time: boolean
-        big: boolean
-        // values for enum type
-        values: any[]
+        mapsTo?: string
 
-        mapsTo: string
-
-        unique?: boolean | string[]
+        // unique?: boolean | string[]
+        unique?: boolean
         index?: boolean | string[]
+
+        /* extra option :start */
+        serial?: boolean
+        unsigned?: boolean
+        primary?: boolean
+        required?: boolean
+        defaultValue?: any
+        size?: number | string
+        rational?: boolean // whether float typ
+        time?: boolean
+        big?: boolean
+        values?: any[] // values for enum type
         /* extra option :end */
 
         [ext_k: string]: any
@@ -93,7 +90,7 @@ declare namespace FxOrmSqlDDLSync__Column {
         type: PropertyType_SQLite
     }
 
-    interface OpResult__CreateColumn {
+    interface OpResult__CreateColumn extends FxOrmSqlDDLSync__Dialect.DialectResult {
         value: string
         before: Function
     }

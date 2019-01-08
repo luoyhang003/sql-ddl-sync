@@ -51,10 +51,10 @@ export const getCollectionProperties: FxOrmSqlDDLSync__Dialect.Dialect['getColle
 	driver.execQuery("SHOW COLUMNS FROM ??", [name], function (err, cols: FxOrmSqlDDLSync__Column.PropertyDescriptor__MySQL[]) {
 		if (err) return cb(err);
 
-		var columns = <{ [col: string]: FxOrmSqlDDLSync__Column.Property }>{}, m;
+		const columns = <{ [col: string]: FxOrmSqlDDLSync__Column.ColumnInfo }>{};
 
-		for (var i = 0; i < cols.length; i++) {
-			var column = <FxOrmSqlDDLSync__Column.Property>{};
+		for (let i = 0; i < cols.length; i++) {
+			let column = <FxOrmSqlDDLSync__Column.Property>{};
 			colInfoBuffer2Str(cols[i]);
 
 			if (cols[i].Type.indexOf(" ") > 0) {
@@ -62,7 +62,8 @@ export const getCollectionProperties: FxOrmSqlDDLSync__Dialect.Dialect['getColle
 				cols[i].Type = cols[i].Type.substr(0, cols[i].Type.indexOf(" "));
 			}
 
-			m = cols[i].Type.match(/^(.+)\((\d+)\)$/);
+			// match_result
+			let m = cols[i].Type.match(/^(.+)\((\d+)\)$/);
 			if (m) {
 				cols[i].Size = parseInt(m[2], 10);
 				cols[i].Type = m[1];
@@ -329,8 +330,10 @@ export const getType: FxOrmSqlDDLSync__Dialect.Dialect['getType'] = function (
 	};
 };
 
-function convertIndexRows(rows: FxOrmSqlDDLSync__Driver.IndexRow_MySQL[]) {
-	const indexes = {};
+function convertIndexRows(
+	rows: FxOrmSqlDDLSync__Driver.DbIndexInfo_MySQL[]
+): FxOrmSqlDDLSync__DbIndex.DbIndexInfoHash {
+	const indexes = <FxOrmSqlDDLSync__DbIndex.DbIndexInfoHash>{};
 
 	for (let i = 0; i < rows.length; i++) {
 		if (rows[i].index_name == 'PRIMARY') {

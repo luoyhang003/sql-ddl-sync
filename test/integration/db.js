@@ -8,9 +8,13 @@ var Sync = require('../../').Sync;
 var sync    = new Sync({
 	driver  : common.driver,
 	debug   : function (text) {
-		// console.log("> %s", text);
+		process.env.DEBUG_SYNC && console.log("> %s", text);
 	}
 });
+
+function is_sqlite () {
+	return common.dialect === "sqlite"
+}
 
 sync.defineCollection(common.table, {
   id     : { type: "serial", key: true, serial: true },
@@ -19,58 +23,33 @@ sync.defineCollection(common.table, {
   male   : { type: "boolean" },
   born   : { type: "date", time: true },
   born2  : { type: "date" },
-  int2   : { type: "integer", size: 2 },
+  int2   : { type: "integer", size: 2, index: [ "idx1", "idx2" ] },
   int4   : { type: "integer", size: 4 },
-  int8   : { type: "integer", size: 8 },
+  int8   : { type: "integer", size: 8, index: [ "idx2" ] },
   float4 : { type: "number",  size: 4 },
-  float8 : { type: "number",  size: 8 },
+  float8 : { type: "number",  size: 8, index: [ "index" ] },
   photo  : { type: "binary" }
 });
 
 // These will fail because autosync has been disabled pending data integrity concerns.
 
-describe("db", function () {
-	before(common.dropTable());
+function testOnUseSync (use_force_sync = Math.random(0, 1) > 0.5) {
+	describe(`db: in ${use_force_sync ? 'forceSync' : 'sync'}`, function () {
+		before(common.dropTable())
 
-	describe("Synching", function () {
-		it("should create the table", function (done) {
-			sync.sync(function (err, info) {
-				should.not.exist(err);
-				should.exist(info);
-				info.should.have.property("changes");
-
-				return done();
-			});
-		});
-
-		it("should have no changes on second call", function (done) {
-			sync.sync(function (err, info) {
-				should.not.exist(err);
-				should.exist(info);
-				info.should.have.property("changes", 0);
-
-				return done();
-			});
-		});
-	});
-
-	if (common.dialect != "sqlite") {
-		describe("Dropping a column", function () {
-			before(common.dropColumn('born'));
-
-			it("should recreate it on first call", function (done) {
-				sync.sync(function (err, info) {
+		describe("Syncing", function () {
+			it("should create the table", function (done) {
+				sync[use_force_sync ? 'forceSync' : 'sync'](function (err, info) {
 					should.not.exist(err);
 					should.exist(info);
-					// info.should.have.property("changes", 1);
-					info.should.have.property("changes", 0);
+					info.should.have.property("changes");
 
 					return done();
 				});
 			});
 
 			it("should have no changes on second call", function (done) {
-				sync.sync(function (err, info) {
+				sync[use_force_sync ? 'forceSync' : 'sync'](function (err, info) {
 					should.not.exist(err);
 					should.exist(info);
 					info.should.have.property("changes", 0);
@@ -80,22 +59,135 @@ describe("db", function () {
 			});
 		});
 
-		describe("Dropping a column that has an index", function () {
-			before(common.dropColumn('born2'));
+		if (common.dialect != "sqlite") {
+			describe("Dropping a column", function () {
+				before(common.dropColumn('born'));
 
-			it("should recreate column and index on first call", function (done) {
-				sync.sync(function (err, info) {
+				it("should recreate it on first call", function (done) {
+					sync[use_force_sync ? 'forceSync' : 'sync'](function (err, info) {
+						should.not.exist(err);
+						should.exist(info);
+						if (use_force_sync)
+							info.should.have.property("changes", 1);
+						else
+							info.should.have.property("changes", 0);
+
+						return done();
+					});
+				});
+
+				it("should have no changes on second call", function (done) {
+					sync[use_force_sync ? 'forceSync' : 'sync'](function (err, info) {
+						should.not.exist(err);
+						should.exist(info);
+						info.should.have.property("changes", 0);
+
+						return done();
+					});
+				});
+			});
+
+			describe("Dropping a column that has an index", function () {
+				before(common.dropColumn('born2'));
+
+				it("should recreate column and index on first call", function (done) {
+					sync[use_force_sync ? 'forceSync' : 'sync'](function (err, info) {
+						should.not.exist(err);
+						should.exist(info);
+						if (use_force_sync)
+							// info.should.have.property("changes", 2);
+							info.should.have.property("changes", 1);
+						else
+							info.should.have.property("changes", 0);
+
+						return done();
+					});
+				});
+
+				it("should have no changes on second call", function (done) {
+					sync[use_force_sync ? 'forceSync' : 'sync'](function (err, info) {
+						should.not.exist(err);
+						should.exist(info);
+						info.should.have.property("changes", 0);
+
+						return done();
+					});
+				});
+			});
+
+			describe("Adding a column", function () {
+				before(common.addColumn('unknown_col'));
+
+				it("should drop column on first call", function (done) {
+					sync[use_force_sync ? 'forceSync' : 'sync'](function (err, info) {
+						should.not.exist(err);
+						should.exist(info);
+						if (use_force_sync)
+							info.should.have.property("changes", 1);
+						else
+							info.should.have.property("changes", 0);
+
+						return done();
+					});
+				});
+
+				it("should have no changes on second call", function (done) {
+					sync[use_force_sync ? 'forceSync' : 'sync'](function (err, info) {
+						should.not.exist(err);
+						should.exist(info);
+						info.should.have.property("changes", 0);
+
+						return done();
+					});
+				});
+			});
+
+			describe("Changing a column", function () {
+				before(common.changeColumn('int4'));
+
+				it("should update column on first call", function (done) {
+					sync[use_force_sync ? 'forceSync' : 'sync'](function (err, info) {
+						should.not.exist(err);
+						should.exist(info);
+						if (use_force_sync)
+							info.should.have.property("changes", 1);
+						else
+							info.should.have.property("changes", 0);
+
+						return done();
+					});
+				});
+
+				it("should have no changes on second call", function (done) {
+					sync[use_force_sync ? 'forceSync' : 'sync'](function (err, info) {
+						should.not.exist(err);
+						should.exist(info);
+						info.should.have.property("changes", 0);
+
+						return done();
+					});
+				});
+			});
+		}
+
+		describe("Adding an index", function () {
+			before(common.addIndex(`xpto`, 'int4'));
+
+			it("should drop index on first call", function (done) {
+				sync[use_force_sync ? 'forceSync' : 'sync'](function (err, info) {
 					should.not.exist(err);
 					should.exist(info);
-					// info.should.have.property("changes", 2);
-					info.should.have.property("changes", 0);
+					if (use_force_sync)
+						info.should.have.property("changes", 1);
+					else
+						info.should.have.property("changes", 0);
 
 					return done();
 				});
 			});
 
 			it("should have no changes on second call", function (done) {
-				sync.sync(function (err, info) {
+				sync[use_force_sync ? 'forceSync' : 'sync'](function (err, info) {
 					should.not.exist(err);
 					should.exist(info);
 					info.should.have.property("changes", 0);
@@ -105,47 +197,25 @@ describe("db", function () {
 			});
 		});
 
-		describe("Adding a column", function () {
-			before(common.addColumn('unknown_col'));
+		describe("Dropping an index", function () {
+			// before(common.addIndex('idx2', 'int4'));
+			after(common.dropIndex('idx2'))
 
-			it("should drop column on first call", function (done) {
-				sync.sync(function (err, info) {
+			it("should drop index on first call", function (done) {
+				sync[use_force_sync ? 'forceSync' : 'sync'](function (err, info) {
 					should.not.exist(err);
 					should.exist(info);
-					// info.should.have.property("changes", 1);
-					info.should.have.property("changes", 0);
-
-					return done();
-				});
-			});
-
-			it("should have no changes on second call", function (done) {
-				sync.sync(function (err, info) {
-					should.not.exist(err);
-					should.exist(info);
-					info.should.have.property("changes", 0);
-
-					return done();
-				});
-			});
-		});
-
-		describe("Changing a column", function () {
-			before(common.changeColumn('int4'));
-
-			it("should update column on first call", function (done) {
-				sync.sync(function (err, info) {
-					should.not.exist(err);
-					should.exist(info);
-					// info.should.have.property("changes", 1);
-					info.should.have.property("changes", 0);
+					if (use_force_sync)
+						info.should.have.property("changes", 0);
+					else
+						info.should.have.property("changes", 0);
 
 					return done();
 				});
 			});
 
 			it("should have no changes on second call", function (done) {
-				sync.sync(function (err, info) {
+				sync[use_force_sync ? 'forceSync' : 'sync'](function (err, info) {
 					should.not.exist(err);
 					should.exist(info);
 					info.should.have.property("changes", 0);
@@ -154,89 +224,44 @@ describe("db", function () {
 				});
 			});
 		});
-	}
 
-	describe("Adding an index", function () {
-		before(common.addIndex('xpto', 'int4'));
-		after(common.dropIndex('xpto'))
+		describe("Changing index to unique index", function () {
+			before(function (done) {
+				common.dropIndex('float8_index')(function () {
+					common.addIndex('float8_index', 'float8', true)(done);
+				});
+			});
 
-		it("should drop index on first call", function (done) {
-			sync.sync(function (err, info) {
-				should.not.exist(err);
-				should.exist(info);
-				// info.should.have.property("changes", 1);
-				info.should.have.property("changes", 0);
+			it("should drop index and recreate it on first call", function (done) {
+				sync[use_force_sync ? 'forceSync' : 'sync'](function (err, info) {
+					should.not.exist(err);
+					should.exist(info);
+					if (use_force_sync)
+						info.should.have.property("changes", 2);
+					else
+						info.should.have.property("changes", 0);
 
-				return done();
+					return done();
+				});
+			});
+
+			it("should have no changes on second call", function (done) {
+				sync[use_force_sync ? 'forceSync' : 'sync'](function (err, info) {
+					should.not.exist(err);
+					should.exist(info);
+					info.should.have.property("changes", 0);
+
+					return done();
+				});
 			});
 		});
 
-		it("should have no changes on second call", function (done) {
-			sync.sync(function (err, info) {
-				should.not.exist(err);
-				should.exist(info);
-				info.should.have.property("changes", 0);
 
-				return done();
-			});
-		});
 	});
+}
 
-	describe("Dropping an index", function () {
-		before(common.addIndex('idx2', 'int4'));
-		after(common.dropIndex('idx2'))
-
-		it("should drop index on first call", function (done) {
-			sync.sync(function (err, info) {
-				should.not.exist(err);
-				should.exist(info);
-				// info.should.have.property("changes", 1);
-				info.should.have.property("changes", 0);
-
-				return done();
-			});
-		});
-
-		it("should have no changes on second call", function (done) {
-			sync.sync(function (err, info) {
-				should.not.exist(err);
-				should.exist(info);
-				info.should.have.property("changes", 0);
-
-				return done();
-			});
-		});
-	});
-
-	describe("Changing index to unique index", function () {
-		before(function (done) {
-			common.dropIndex('float8_index')(function () {
-				common.addIndex('float8_index', 'float8', true)(done);
-			});
-		});
-
-		it("should drop index and recreate it on first call", function (done) {
-			sync.sync(function (err, info) {
-				should.not.exist(err);
-				should.exist(info);
-				// info.should.have.property("changes", 1);
-				info.should.have.property("changes", 0);
-
-				return done();
-			});
-		});
-
-		it("should have no changes on second call", function (done) {
-			sync.sync(function (err, info) {
-				should.not.exist(err);
-				should.exist(info);
-				info.should.have.property("changes", 0);
-
-				return done();
-			});
-		});
-	});
-});
+testOnUseSync(true);
+testOnUseSync(false);
 
 if (require.main === module) {
   test.run(console.DEBUG)

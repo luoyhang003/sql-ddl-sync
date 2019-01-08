@@ -11,7 +11,7 @@
 declare namespace FxOrmSqlDDLSync {
     interface SyncOptions {
         driver: FxOrmSqlDDLSync__Driver.Driver
-        debug?: Function | boolean
+        debug?: Function | false
         suppressColumnDrop?: boolean
     }
     interface SyncConstructor {
@@ -23,7 +23,7 @@ declare namespace FxOrmSqlDDLSync {
     }
     interface Sync {
         defineCollection: {
-            (collection: FxOrmSqlDDLSync__Collection.Collection, properties: FxOrmSqlDDLSync__Collection.Collection['properties']): Sync
+            (collection_name: string, properties: FxOrmSqlDDLSync__Collection.Collection['properties']): Sync
         }
         defineType: {
             (type: string, proto: FxOrmSqlDDLSync__Driver.CustomPropertyType): Sync
@@ -31,6 +31,9 @@ declare namespace FxOrmSqlDDLSync {
         sync: {
             (cb?: FxOrmSqlDDLSync.ExecutionCallback<SyncResult>): void
         }
+        forceSync: Sync['sync']
+
+        [ext: string]: any
     }
     // compatible
     type SyncInstance = Sync
@@ -38,7 +41,7 @@ declare namespace FxOrmSqlDDLSync {
     interface ExportModule {
         dialect(name: string): FxOrmSqlDDLSync__Dialect.Dialect
         Sync: {
-            new (options: SyncOptions): void
+            new (options: SyncOptions): Sync
             (options: SyncOptions): Sync
         }
     }

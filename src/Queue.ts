@@ -1,20 +1,38 @@
 /// <reference path="../@types/index.d.ts" />
 
-export class Queue {
+/**
+ * One TaskQueue, run all tasks added to it, util all tasks processed, or error occured
+ */
+export class Queue<
+	ARG_TYPE=any,
+> {
+	/**
+	 * Queue's status
+	 * 
+	 * * -1: inactive/invalid, generally due to occured error
+	 * * 0: awaiting/finish
+	 * * >=1: there's pending tasks(fun)
+	 */
 	pending: number = 0
-	cb: Function
 
-	constructor (cb: Function) {
-		this.cb = cb;
-	}
+	constructor (
+		private cb: FxOrmSqlDDLSync.ExecutionCallback<void>
+	) {}
 
+	/**
+	 * @param args
+	 * 	the last arg of `add` must be an Function or object callable,
+	 * 	the rest args before the function would become arguments applied to function
+	 */
+	add (arg1: ARG_TYPE, func: FxOrmSqlDDLSync.QueueTypedNextFunction<ARG_TYPE>)
+	add (func: FxOrmSqlDDLSync.QueueTypedNextFunction<ARG_TYPE>)
 	add (...args: any[]) {
 		if (this.pending == -1) return;
 		this.pending += 1;
 
-		var fun = args.pop();
+		const fun: FxOrmSqlDDLSync.QueueTypedNextFunction<ARG_TYPE> = args.pop();
 
-		args.push(function (err) {
+		args.push((err: Error) => {
 			if (this.pending == -1) return;
 			if (err) {
 				this.pending = -1;
@@ -22,15 +40,18 @@ export class Queue {
 				return this.cb(err);
 			}
 			if (--this.pending === 0) {
-				return this.cb();
+				return this.cb(null);
 			}
-		}.bind(this));
+		});
 
 		fun.apply(null, args);
 
 		return this;
 	}
 
+	/**
+	 * check if all tasks processed, if they are, just invoke callback
+	 */
 	check () {
 		if (this.pending === 0) {
 			return this.cb();

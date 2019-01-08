@@ -10,6 +10,10 @@ declare namespace FxOrmSqlDDLSync__Driver {
         [ext_cfg_name: string]: any
     }
 
+    interface CustomPropertyTypeHash {
+        [key: string]: CustomPropertyType
+    }
+
     interface DriverConfig {
         database: string
 
@@ -52,7 +56,12 @@ declare namespace FxOrmSqlDDLSync__Driver {
          * @description do eager-query
          */
         eagerQuery: {
-            <T = any>(association, opts, keys, cb: FxOrmSqlDDLSync.ExecutionCallback<T>)
+            <T = any>(
+                association,
+                opts,
+                keys,
+                cb: FxOrmSqlDDLSync.ExecutionCallback<T>
+            )
         }
 
         customTypes: {
@@ -60,20 +69,14 @@ declare namespace FxOrmSqlDDLSync__Driver {
         }
     }
 
-    interface IndexRow {
-        [k: string]: any
-    }
-
-    interface IndexRow_MySQL extends IndexRow {
+    interface DbIndexInfo_MySQL extends FxOrmSqlDDLSync__DbIndex.DbIndexInfo {
         index_name: string
         column_name: string
 
         non_unique: number|boolean
     }
 
-    interface IndexRow_SQLite extends IndexRow {
-        name: string
-
-        unique: number|boolean
+    interface DbIndexInfo_SQLite extends FxOrmSqlDDLSync__DbIndex.DbIndexInfo {
+        unique: boolean
     }
 }

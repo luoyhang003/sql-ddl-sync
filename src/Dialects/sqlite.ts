@@ -211,7 +211,7 @@ export const addIndex: FxOrmSqlDDLSync__Dialect.Dialect['addIndex'] = function (
 };
 
 export const removeIndex: FxOrmSqlDDLSync__Dialect.Dialect['removeIndex'] = function (
-	driver, name, collection, cb
+	driver, collection, name, cb
 ) {
 	return driver.execQuery("DROP INDEX IF EXISTS " + driver.query.escapeId(name), cb);
 };
@@ -233,7 +233,9 @@ export const supportsType: FxOrmSqlDDLSync__Dialect.Dialect['supportsType'] = fu
 	return type;
 };
 
-export const getType: FxOrmSqlDDLSync__Dialect.Dialect['getType'] = function (collection, property: FxOrmSqlDDLSync__Column.PropertySQLite, driver) {
+export const getType: FxOrmSqlDDLSync__Dialect.Dialect['getType'] = function (
+	collection, property: FxOrmSqlDDLSync__Column.PropertySQLite, driver
+) {
 	var type: false | FxOrmSqlDDLSync__Column.ColumnType_SQLite = false;
 	var customType = null;
 
@@ -310,14 +312,17 @@ export const getType: FxOrmSqlDDLSync__Dialect.Dialect['getType'] = function (co
 	};
 };
 
-function convertIndexRows(rows: FxOrmSqlDDLSync__Driver.IndexRow_SQLite[]) {
-	var indexes = {};
+function convertIndexRows(
+	rows: FxOrmSqlDDLSync__Driver.DbIndexInfo_SQLite[]
+): {[k: string]: FxOrmSqlDDLSync__Driver.DbIndexInfo_SQLite} {
+	var indexes = <{[k: string]: FxOrmSqlDDLSync__Driver.DbIndexInfo_SQLite}>{};
 
 	for (var i = 0; i < rows.length; i++) {
 		if (!indexes.hasOwnProperty(rows[i].name)) {
 			indexes[rows[i].name] = {
 				columns: [],
-				unique: (rows[i].unique == 1)
+				// unique: (rows[i].unique == 1)
+				unique: rows[i].unique
 			};
 		}
 	}

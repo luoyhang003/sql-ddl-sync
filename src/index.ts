@@ -2,6 +2,7 @@
 
 import { Queue } from './Queue';
 import util  = require('util')
+import { syncObject, syncCallback } from './Utils';
 
 const noOp: Function = () => {};
 
@@ -12,62 +13,188 @@ export function dialect (name: string): FxOrmSqlDDLSync__Dialect.Dialect {
 export class Sync implements FxOrmSqlDDLSync.Sync {
 	constructor (
 		options: FxOrmSqlDDLSync.SyncOptions,
-		private debug = (options.debug || noOp) as Function,
+		private debug: Function = options.debug || noOp,
 		private driver: FxOrmSqlDDLSync__Driver.Driver = options.driver,
 		private Dialect: FxOrmSqlDDLSync__Dialect.Dialect = require("./Dialects/" + driver.dialect),
 		private suppressColumnDrop = options.suppressColumnDrop,
 		private collections = [],
-		private types       = {},
+		/**
+		 * @description customTypes
+		 */
+		private types = <FxOrmSqlDDLSync__Driver.CustomPropertyTypeHash>{},
+		/**
+		 * @description total changes count in this time `Sync`
+		 * @deprecated
+		 */
 		private total_changes: number
 	) {
+		syncObject(this, ['sync'])
 	}
 
-	private processCollection (
-		collection: FxOrmSqlDDLSync__Collection.Collection, cb: FxOrmSqlDDLSync.ExecutionCallback<boolean>
-	) {
-		this.Dialect.hasCollection(this.driver, collection.name, (err, has) => {
-			if (err)
-				return cb(err);
-
-			if (!has)
-				return this.createCollection(collection, (err) => {
-					if (err) return cb(err);
-					return cb(null, true);
-				});
-			else
-				return cb(null, false);
-
-			// I have concerns about the data integrity of the automatic sync process.
-			// There has been lots of bugs and issues associated with it.
-			// Dialect.getCollectionProperties(driver, collection.name, function (err, columns) {
-			// 	if (err) {
-			// 		return cb(err);
-			// 	}
-
-			// 	return syncCollection(collection, columns, cb);
-			// });
+	[sync_method: string]: any
+	
+	defineCollection (collection_name: string, properties: FxOrmSqlDDLSync__Collection.Collection['properties']): FxOrmSqlDDLSync.Sync {
+		this.collections.push({
+			name       : collection_name,
+			properties : properties
 		});
-	};
+		return this;
+	}
+	defineType (type: string, proto: FxOrmSqlDDLSync__Driver.CustomPropertyType): FxOrmSqlDDLSync.Sync {
+		this.types[type] = proto;
+		return this;
+	}
 
-	private createCollection (
-		collection: FxOrmSqlDDLSync__Collection.Collection,
-		cb: FxOrmSqlDDLSync.ExecutionCallback<any>
-	) {
-		var columns = [];
-		var keys = [];
-		var before  = [];
+	sync (cb?: FxOrmSqlDDLSync.ExecutionCallback<FxOrmSqlDDLSync.SyncResult>): void {
+		this.makeSyncIteration(false, cb)
+	}
+	forceSync (cb?: FxOrmSqlDDLSync.ExecutionCallback<FxOrmSqlDDLSync.SyncResult>): void {
+		this.makeSyncIteration(true, cb)
+	}
 
-		var nextBefore = () => {
-			if (before.length === 0) {
-				return this.Dialect.createCollection(this.driver, collection.name, columns, keys, (err) => {
-					if (err) return cb(err);
-					return this.syncIndexes(collection.name, this.getCollectionIndexes(collection), cb);
+	private makeSyncIteration (force_sync: boolean = false, cb?: FxOrmSqlDDLSync.ExecutionCallback<FxOrmSqlDDLSync.SyncResult>): void {
+		let i = 0;
+		const processNext = () => {
+			if (i >= this.collections.length) {
+				return cb(null, {
+					changes: this.total_changes
 				});
 			}
 
-			var next = before.shift();
+			const collection = this.collections[i++];
 
-			next(this.driver, (err) => {
+			try {
+				syncCallback(
+					this.processCollection as FxOrmSqlDDLSync.NextCallbackWrapper,
+					this
+				)(collection, force_sync)
+			} catch (err) {
+				return cb(err)
+			}
+
+			processNext()
+		};
+
+		this.total_changes = 0;
+
+		return processNext();
+	}
+
+	private processCollection (
+		collection: FxOrmSqlDDLSync__Collection.Collection, force_sync: boolean, cb: FxOrmSqlDDLSync.ExecutionCallback<boolean>
+	) {
+		let has: boolean;
+		let is_processed: boolean = false;
+		try {
+			has = syncCallback(
+				this.Dialect.hasCollection as FxOrmSqlDDLSync.NextCallbackWrapper,
+				this.Dialect
+			)(this.driver, collection.name)
+		} catch (err) {
+			return cb(err)
+		}
+
+		if (!has) {
+			try {
+				syncCallback(
+					this.createCollection,
+					this
+				)(collection)
+
+				is_processed = true;
+			} catch (err) {
+				return cb(err)
+			}
+		}
+
+		if (!force_sync)
+			// not process, callback `false`
+			return cb(null, is_processed)
+
+		let columns: FxOrmSqlDDLSync__Column.ColumnInfo[] = null
+		try {
+			columns = syncCallback(
+				this.Dialect.getCollectionProperties as FxOrmSqlDDLSync.NextCallbackWrapper,
+				this.Dialect
+			)(this.driver, collection.name)
+		} catch (err) {
+			return cb(err)
+		}
+
+		try {
+			syncCallback(
+				this.syncCollection as FxOrmSqlDDLSync.NextCallbackWrapper,
+				this
+			)(collection, columns)
+		} catch (err) {
+			return cb(err)
+		}
+
+		// processed, callback `true`
+		cb(null, true);
+
+		// this.Dialect.hasCollection(this.driver, collection.name, (err, has) => {
+		// 	if (err)
+		// 		return cb(err);
+
+		// 	if (!has)
+		// 		return this.createCollection(collection, (err) => {
+		// 			if (err) return cb(err);
+		// 			return cb(null, true);
+		// 		});
+		// 	else
+		// 		return cb(null, false);
+
+		// 	// // I have concerns about the data integrity of the automatic sync process.
+		// 	// // There has been lots of bugs and issues associated with it.
+		// 	// this.Dialect.getCollectionProperties(
+		// 	// 	this.driver,
+		// 	// 	collection.name,
+		// 	// 	(err, columns) => {
+		// 	// 		if (err) {
+		// 	// 			return cb(err);
+		// 	// 		}
+
+		// 	// 		return this.syncCollection(collection, columns, cb);
+		// 	// 	}
+		// 	// );
+		// });
+	}
+
+	/**
+	 * 
+	 * @param collection collection relation to create 
+	 * @callback cb 
+	 */
+	private createCollection (
+		collection: FxOrmSqlDDLSync__Collection.Collection,
+		cb: FxOrmSqlDDLSync.ExecutionCallback<void>
+	) {
+		const columns: string[] = [];
+		const before: Function[]  = [];
+
+		let keys: string[] = [];
+
+		/**
+		 * process all before-function before dao(createCollection),
+		 * this make it hookable to col's creation 
+		 */
+		const nextBefore = () => {
+			/* 1. dao(createCollection) */
+			if (before.length === 0)
+				return this.Dialect.createCollection(
+					this.driver,
+					collection.name, columns, keys,
+					(err) => {
+						if (err) return cb(err);
+						return this.syncIndexes(collection.name, this.getCollectionIndexes(collection), cb);
+					}
+				);
+
+			/* 2. or, do pre-process before dao(createCollection) */
+			const next = before.shift();
+
+			next(this.driver, (err: Error) => {
 				if (err) {
 					return cb(err);
 				}
@@ -76,8 +203,9 @@ export class Sync implements FxOrmSqlDDLSync.Sync {
 			});
 		};
 
-		for (var k in collection.properties) {
-			var prop, col;
+		for (let k in collection.properties) {
+			let prop: FxOrmSqlDDLSync__Column.Property,
+				col: false | FxOrmSqlDDLSync__Column.OpResult__CreateColumn;
 
 			prop = collection.properties[k];
 			prop.mapsTo = prop.mapsTo || k;
@@ -108,19 +236,25 @@ export class Sync implements FxOrmSqlDDLSync.Sync {
 		this.total_changes += 1;
 
 		return nextBefore();
-	};
+	}
 
-
+	/**
+	 * @param collection table where column created
+	 * @param prop column's property
+	 */
 	private createColumn (
-		collection: FxOrmSqlDDLSync.TableName,
+		collection_name: FxOrmSqlDDLSync.TableName,
 		prop: FxOrmSqlDDLSync__Column.Property
 	): false | FxOrmSqlDDLSync__Column.OpResult__CreateColumn {
-		var type: false | string | FxOrmSqlDDLSync__Column.OpResult__CreateColumn;
+		let type: false | string | FxOrmSqlDDLSync__Column.OpResult__CreateColumn;
 
+		/**
+		 * get type, customTypes first
+		 */
 		if (this.types.hasOwnProperty(prop.type)) {
 			type = this.types[prop.type].datastoreType(prop);
-		} else {
-			type = this.Dialect.getType(collection, prop, this.driver);
+		} else { // fallback to driver's types
+			type = this.Dialect.getType(collection_name, prop, this.driver);
 		}
 
 		if (type === false)
@@ -138,18 +272,21 @@ export class Sync implements FxOrmSqlDDLSync.Sync {
 			value  : this.driver.query.escapeId(prop.mapsTo) + " " + type.value,
 			before : type.before
 		};
-	};
+	}
 
-	private syncCollection (collection, columns, cb) {
-
-		var queue   = new Queue(cb);
-		var last_k  = null;
+	private syncCollection (
+		collection: FxOrmSqlDDLSync__Collection.Collection,
+		columns: FxOrmSqlDDLSync__Column.ColumnInfo[],
+		cb: FxOrmSqlDDLSync.ExecutionCallback<void>
+	) {
+		const queue   = new Queue(cb);
+		let last_k  = null;
 
 		this.debug("Synchronizing " + collection.name);
-
-		for (var k in collection.properties) {
+		
+		for (let k in collection.properties) {
 			if (!columns.hasOwnProperty(k)) {
-				var col = this.createColumn(collection.name, collection.properties[k]);
+				const col = this.createColumn(collection.name, collection.properties[k]);
 
 				if (col === false) {
 					return cb(new Error("Unknown type for property '" + k + "'"));
@@ -173,9 +310,9 @@ export class Sync implements FxOrmSqlDDLSync.Sync {
 						return this.Dialect.addCollectionColumn(this.driver, collection.name, (col as FxOrmSqlDDLSync__Column.OpResult__CreateColumn).value, last_k, next);
 					});
 				}
-			} else if (this.needToSync(collection.properties[k], columns[k])) {
-				// var col = createColumn(collection.name, k/* collection.properties[k] */);
-				var col = this.createColumn(collection.name, collection.properties[k]);
+			} else if (this.driver.dialect !== 'sqlite' && this.needToSync(collection.properties[k], columns[k])) {
+				// var col = this.createColumn(collection.name, k/* collection.properties[k] */);
+				const col = this.createColumn(collection.name, collection.properties[k]);
 
 				if (col === false) {
 					return cb(new Error("Unknown type for property '" + k + "'"));
@@ -187,7 +324,7 @@ export class Sync implements FxOrmSqlDDLSync.Sync {
 
 				if (col.before) {
 					queue.add(col, (col: FxOrmSqlDDLSync__Column.OpResult__CreateColumn, next) => {
-						col.before(this.driver, (err) => {
+						col.before(this.driver, (err: Error) => {
 							if (err) {
 								return next(err);
 							}
@@ -207,7 +344,7 @@ export class Sync implements FxOrmSqlDDLSync.Sync {
         if ( !this.suppressColumnDrop ) {
             for (var k in columns) {
                 if (!collection.properties.hasOwnProperty(k)) {
-                    queue.add((next: FxOrmSqlDDLSync.ExecutionCallback<any>) => {
+                    queue.add((next: FxOrmSqlDDLSync.ExecutionCallback<FxOrmSqlDDLSync.SyncResult>) => {
                         this.debug("Dropping column " + collection.name + "." + k);
 
                         this.total_changes += 1;
@@ -221,14 +358,20 @@ export class Sync implements FxOrmSqlDDLSync.Sync {
 		var indexes = this.getCollectionIndexes(collection);
 
 		if (indexes.length) {
-			queue.add((next: FxOrmSqlDDLSync.ExecutionCallback<any>) => {
+			queue.add((next: FxOrmSqlDDLSync.ExecutionCallback<void>) => {
 				return this.syncIndexes(collection.name, indexes, next);
 			});
 		}
 
 		return queue.check();
-	};
+	}
 
+	/**
+	 * @description compute system's index name by dialect type
+	 * 
+	 * @param collection collection to indexed
+	 * @param prop column's property
+	 */
 	private getIndexName (
 		collection: FxOrmSqlDDLSync__Collection.Collection, prop: FxOrmSqlDDLSync__Column.Property
 	) {
@@ -239,8 +382,12 @@ export class Sync implements FxOrmSqlDDLSync.Sync {
 		} else {
 			return prop.name + '_' + post;
 		}
-	};
+	}
 
+	/**
+	 * 
+	 * @param collection collection relation to find its indexes
+	 */
 	private getCollectionIndexes (
 		collection: FxOrmSqlDDLSync__Collection.Collection
 	): FxOrmSqlDDLSync__DbIndex.DbIndexInfo[] {
@@ -324,56 +471,56 @@ export class Sync implements FxOrmSqlDDLSync.Sync {
 		}
 
 		return indexes;
-	};
+	}
 
 	private syncIndexes (
-		name: string, indexes: FxOrmSqlDDLSync__DbIndex.DbIndexInfo[], cb: FxOrmSqlDDLSync.ExecutionCallback<any>
+		collection_name: string, indexes: FxOrmSqlDDLSync__DbIndex.DbIndexInfo[], cb: FxOrmSqlDDLSync.ExecutionCallback<void>
 	) {
 		if (indexes.length == 0) return cb(null);
 
-		this.Dialect.getCollectionIndexes(this.driver, name, (err: Error, db_indexes) => {
+		this.Dialect.getCollectionIndexes(this.driver, collection_name, (err: Error, db_indexes) => {
 			if (err) return cb(err);
 
-			var queue = new Queue(cb);
+			var queue = new Queue<string|FxOrmSqlDDLSync__DbIndex.DbIndexInfo>(cb);
 
 			for (let i = 0; i < indexes.length; i++) {
 				if (!db_indexes.hasOwnProperty(indexes[i].name)) {
-					this.debug("Adding index " + name + "." + indexes[i].name + " (" + indexes[i].columns.join(", ") + ")");
+					this.debug("Adding index " + collection_name + "." + indexes[i].name + " (" + indexes[i].columns.join(", ") + ")");
 
 					this.total_changes += 1;
 
-					queue.add(indexes[i], (index, next) => {
-						return this.Dialect.addIndex(this.driver, index.name, index.unique, name, index.columns, next);
+					queue.add(indexes[i], (index: FxOrmSqlDDLSync__DbIndex.DbIndexInfo, next) => {
+						return this.Dialect.addIndex(this.driver, index.name, index.unique, collection_name, index.columns, next);
 					});
 					continue;
 				} else if (!db_indexes[indexes[i].name].unique != !indexes[i].unique) {
-					this.debug("Replacing index " + name + "." + indexes[i].name);
+					this.debug("Replacing index " + collection_name + "." + indexes[i].name);
 
 					this.total_changes += 1;
 
-					queue.add(indexes[i], (index, next) => {
-						return this.Dialect.removeIndex(this.driver, index.name, name, next);
+					queue.add(indexes[i], (index: FxOrmSqlDDLSync__DbIndex.DbIndexInfo, next) => {
+						return this.Dialect.removeIndex(this.driver, index.name, collection_name, next);
 					});
-					queue.add(indexes[i], (index, next) => {
-						return this.Dialect.addIndex(this.driver, index.name, index.unique, name, index.columns, next);
+					queue.add(indexes[i], (index: FxOrmSqlDDLSync__DbIndex.DbIndexInfo, next) => {
+						return this.Dialect.addIndex(this.driver, index.name, index.unique, collection_name, index.columns, next);
 					});
 				}
 				delete db_indexes[indexes[i].name];
 			}
 
 			for (let idx in db_indexes) {
-				this.debug("Removing index " + name + "." + idx);
+				this.debug("Removing index " + collection_name + "." + idx);
 
 				this.total_changes += 1;
 
-				queue.add(idx, (index, next) => {
-					return this.Dialect.removeIndex(this.driver, index, name, next);
+				queue.add(idx, (index_k: string, next) => {
+					return this.Dialect.removeIndex(this.driver, collection_name, index_k, next);
 				});
 			}
 
 			return queue.check();
 		});
-	};
+	}
 
 	private needToSync (
 		property: FxOrmSqlDDLSync__Column.Property,
@@ -412,41 +559,5 @@ export class Sync implements FxOrmSqlDDLSync.Sync {
 		}
 
 		return false;
-	};
-	
-	defineCollection (collection: FxOrmSqlDDLSync__Collection.Collection, properties: FxOrmSqlDDLSync__Collection.Collection['properties']): FxOrmSqlDDLSync.Sync {
-		this.collections.push({
-			name       : collection,
-			properties : properties
-		});
-		return this;
-	}
-	defineType (type: string, proto: FxOrmSqlDDLSync__Driver.CustomPropertyType): FxOrmSqlDDLSync.Sync {
-		this.types[type] = proto;
-		return this;
-	}
-	sync (cb?: FxOrmSqlDDLSync.ExecutionCallback<FxOrmSqlDDLSync.SyncResult>): void {
-		var i = 0;
-		var processNext = () => {
-			if (i >= this.collections.length) {
-				return cb(null, {
-					changes: this.total_changes
-				});
-			}
-
-			var collection = this.collections[i++];
-
-			this.processCollection(collection, (err: Error) => {
-				if (err) {
-					return cb(err);
-				}
-
-				return processNext();
-			});
-		};
-
-		this.total_changes = 0;
-
-		return processNext();
 	}
 }

@@ -20,7 +20,7 @@ declare namespace FxOrmSqlDDLSync__Dialect {
             (driver: FxOrmSqlDDLSync__Driver.Driver, tableName: string, columnName: string, cb: FxOrmSqlDDLSync.ExecutionCallback<any>)
         }
         getCollectionProperties: {
-            (driver: FxOrmSqlDDLSync__Driver.Driver, name: string, cb: FxOrmSqlDDLSync.ExecutionCallback<any>)
+            (driver: FxOrmSqlDDLSync__Driver.Driver, name: string, cb: FxOrmSqlDDLSync.ExecutionCallback<FxOrmSqlDDLSync__Column.ColumnInfoHash>)
         }
         createCollection: {
             (driver: FxOrmSqlDDLSync__Driver.Driver, name: string, columns: string[], keys: string[], cb: FxOrmSqlDDLSync.ExecutionCallback<any>)
@@ -41,7 +41,7 @@ declare namespace FxOrmSqlDDLSync__Dialect {
             (driver: FxOrmSqlDDLSync__Driver.Driver, name: string, column: string, cb: FxOrmSqlDDLSync.ExecutionCallback<any>)
         }
         getCollectionIndexes: {
-            (driver: FxOrmSqlDDLSync__Driver.Driver, name: string, cb: FxOrmSqlDDLSync.ExecutionCallback<any>)
+            (driver: FxOrmSqlDDLSync__Driver.Driver, name: string, cb: FxOrmSqlDDLSync.ExecutionCallback<FxOrmSqlDDLSync__DbIndex.DbIndexInfoHash>)
         }
         addIndex: {
             (driver: FxOrmSqlDDLSync__Driver.Driver, name: string, unique: boolean, collection: FxOrmSqlDDLSync.TableName, columns: string[], cb: FxOrmSqlDDLSync.ExecutionCallback<any>)
