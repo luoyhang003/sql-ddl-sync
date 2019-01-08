@@ -19,6 +19,7 @@ declare namespace FxOrmSqlDDLSync__Driver {
      * @description one protocol driver should implement
      */
     interface Driver {
+        dialect: FxOrmSqlDDLSync__Dialect.DialectType
         config: DriverConfig
         query: FxSqlQuery.Class_Query
 
@@ -59,14 +60,18 @@ declare namespace FxOrmSqlDDLSync__Driver {
         }
     }
 
-    interface IndexRow_MySQL {
+    interface IndexRow {
+        [k: string]: any
+    }
+
+    interface IndexRow_MySQL extends IndexRow {
         index_name: string
         column_name: string
 
         non_unique: number|boolean
     }
 
-    interface IndexRow_SQLite {
+    interface IndexRow_SQLite extends IndexRow {
         name: string
 
         unique: number|boolean

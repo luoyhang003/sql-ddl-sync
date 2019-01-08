@@ -2,6 +2,7 @@
 /// <reference path="_common.d.ts" />
 
 declare namespace FxOrmSqlDDLSync__Dialect {
+    type DialectType = 'mysql' | 'mssql' | 'sqlite'
     interface Dialect {
         hasCollection: {
             (driver: FxOrmSqlDDLSync__Driver.Driver, name: string, cb: FxOrmSqlDDLSync.ExecutionCallback<boolean>)
@@ -49,7 +50,7 @@ declare namespace FxOrmSqlDDLSync__Dialect {
             (driver: FxOrmSqlDDLSync__Driver.Driver, name: string, collection: FxOrmSqlDDLSync.TableName, cb: FxOrmSqlDDLSync.ExecutionCallback<any>)
         }
         getType: {
-            (collection: FxOrmSqlDDLSync.TableName, property: FxOrmSqlDDLSync__Column.PropertySQLite, driver: FxOrmSqlDDLSync__Driver.Driver)
+            (collection: FxOrmSqlDDLSync.TableName, property: FxOrmSqlDDLSync__Column.Property, driver: FxOrmSqlDDLSync__Driver.Driver)
         }
 
         /**
@@ -63,6 +64,10 @@ declare namespace FxOrmSqlDDLSync__Dialect {
          */
         supportsType?: {
             (type: string)
+        }
+
+        convertIndexes?: {
+            (rows: FxOrmSqlDDLSync__Collection.Collection, db_idxes: FxOrmSqlDDLSync__DbIndex.DbIndexInfo[]): FxOrmSqlDDLSync__DbIndex.DbIndexInfo[]
         }
     }
 

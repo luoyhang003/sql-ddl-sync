@@ -3,63 +3,71 @@
 import { Queue } from './Queue';
 import util  = require('util')
 
-const noOp: Function = function () {};
+const noOp: Function = () => {};
 
 export function dialect (name: string): FxOrmSqlDDLSync__Dialect.Dialect {
 	return require("./Dialects/" + name);
 }
 
-export function Sync(options: FxOrmSqlDDLSync.SyncOptions) {
-	var debug 		= (options.debug || noOp) as Function;
-	var driver      = options.driver;
-	var Dialect     = require("./Dialects/" + driver.dialect);
-	var suppressColumnDrop = options.suppressColumnDrop;
-	var collections = [];
-	var types       = {};
-	var total_changes;
+export class Sync implements FxOrmSqlDDLSync.Sync {
+	constructor (
+		options: FxOrmSqlDDLSync.SyncOptions,
+		private debug = (options.debug || noOp) as Function,
+		private driver: FxOrmSqlDDLSync__Driver.Driver = options.driver,
+		private Dialect: FxOrmSqlDDLSync__Dialect.Dialect = require("./Dialects/" + driver.dialect),
+		private suppressColumnDrop = options.suppressColumnDrop,
+		private collections = [],
+		private types       = {},
+		private total_changes: number
+	) {
+	}
 
-	var processCollection = function (collection, cb) {
-		Dialect.hasCollection(driver, collection.name, function (err, has) {
-			if (err) {
+	private processCollection (
+		collection: FxOrmSqlDDLSync__Collection.Collection, cb: FxOrmSqlDDLSync.ExecutionCallback<boolean>
+	) {
+		this.Dialect.hasCollection(this.driver, collection.name, (err, has) => {
+			if (err)
 				return cb(err);
-			}
 
-			if (!has) {
-				return createCollection(collection, function (err) {
+			if (!has)
+				return this.createCollection(collection, (err) => {
 					if (err) return cb(err);
 					return cb(null, true);
 				});
-			} else {
+			else
 				return cb(null, false);
-			}
 
 			// I have concerns about the data integrity of the automatic sync process.
 			// There has been lots of bugs and issues associated with it.
-			/* Dialect.getCollectionProperties(driver, collection.name, function (err, columns) {
-				if (err) {
-					return cb(err);
-				}
+			// Dialect.getCollectionProperties(driver, collection.name, function (err, columns) {
+			// 	if (err) {
+			// 		return cb(err);
+			// 	}
 
-				return syncCollection(collection, columns, cb);
-			});*/
+			// 	return syncCollection(collection, columns, cb);
+			// });
 		});
 	};
 
-	var createCollection = function (collection, cb) {
+	private createCollection (
+		collection: FxOrmSqlDDLSync__Collection.Collection,
+		cb: FxOrmSqlDDLSync.ExecutionCallback<any>
+	) {
 		var columns = [];
 		var keys = [];
 		var before  = [];
-		var nextBefore = function () {
+
+		var nextBefore = () => {
 			if (before.length === 0) {
-				return Dialect.createCollection(driver, collection.name, columns, keys, function (err) {
+				return this.Dialect.createCollection(this.driver, collection.name, columns, keys, (err) => {
 					if (err) return cb(err);
-					return syncIndexes(collection.name, getCollectionIndexes(collection), cb);
+					return this.syncIndexes(collection.name, this.getCollectionIndexes(collection), cb);
 				});
 			}
 
 			var next = before.shift();
 
-			next(driver, function (err) {
+			next(this.driver, (err) => {
 				if (err) {
 					return cb(err);
 				}
@@ -74,7 +82,7 @@ export function Sync(options: FxOrmSqlDDLSync.SyncOptions) {
 			prop = collection.properties[k];
 			prop.mapsTo = prop.mapsTo || k;
 
-			col = createColumn(collection.name, prop);
+			col = this.createColumn(collection.name, prop);
 
 			if (col === false) {
 				return cb(new Error("Unknown type for property '" + k + "'"));
@@ -91,31 +99,35 @@ export function Sync(options: FxOrmSqlDDLSync.SyncOptions) {
 			}
 		}
 
-		debug("Creating " + collection.name);
+		this.debug("Creating " + collection.name);
 
-		if (typeof Dialect.processKeys == "function") {
-			keys = Dialect.processKeys(keys);
+		if (typeof this.Dialect.processKeys == "function") {
+			keys = this.Dialect.processKeys(keys);
 		}
 
-		total_changes += 1;
+		this.total_changes += 1;
 
 		return nextBefore();
 	};
 
-	var createColumn = function (collection, prop): false | FxOrmSqlDDLSync__Column.OpResult__CreateColumn {
-		var type;
 
-		if (types.hasOwnProperty(prop.type)) {
-			type = types[prop.type].datastoreType(prop);
+	private createColumn (
+		collection: FxOrmSqlDDLSync.TableName,
+		prop: FxOrmSqlDDLSync__Column.Property
+	): false | FxOrmSqlDDLSync__Column.OpResult__CreateColumn {
+		var type: false | string | FxOrmSqlDDLSync__Column.OpResult__CreateColumn;
+
+		if (this.types.hasOwnProperty(prop.type)) {
+			type = this.types[prop.type].datastoreType(prop);
 		} else {
-			type = Dialect.getType(collection, prop, driver);
+			type = this.Dialect.getType(collection, prop, this.driver);
 		}
 
-		if (type === false) {
+		if (type === false)
 			return false;
-		}
+			
 		if (typeof type == "string") {
-			type = { value : type };
+			type = <FxOrmSqlDDLSync__Column.OpResult__CreateColumn>{ value : type };
 		}
 
 		if (prop.mapsTo === undefined) {
@@ -123,66 +135,68 @@ export function Sync(options: FxOrmSqlDDLSync.SyncOptions) {
 		}
 
 		return {
-			value  : driver.query.escapeId(prop.mapsTo) + " " + type.value,
+			value  : this.driver.query.escapeId(prop.mapsTo) + " " + type.value,
 			before : type.before
 		};
 	};
 
-	var syncCollection = function (collection, columns, cb) {
+	private syncCollection (collection, columns, cb) {
+
 		var queue   = new Queue(cb);
 		var last_k  = null;
 
-		debug("Synchronizing " + collection.name);
+		this.debug("Synchronizing " + collection.name);
 
 		for (var k in collection.properties) {
 			if (!columns.hasOwnProperty(k)) {
-				var col = createColumn(collection.name, collection.properties[k]);
+				var col = this.createColumn(collection.name, collection.properties[k]);
 
 				if (col === false) {
 					return cb(new Error("Unknown type for property '" + k + "'"));
 				}
 
-				debug("Adding column " + collection.name + "." + k + ": " + col.value);
+				this.debug("Adding column " + collection.name + "." + k + ": " + col.value);
 
-				total_changes += 1;
+				this.total_changes += 1;
 
 				if (col.before) {
-					queue.add(col, function (col: FxOrmSqlDDLSync__Column.OpResult__CreateColumn, next) {
-						col.before(driver, function (err) {
+					queue.add(col, (col: FxOrmSqlDDLSync__Column.OpResult__CreateColumn, next) => {
+						col.before(this.driver, (err: Error) => {
 							if (err) {
 								return next(err);
 							}
-							return Dialect.addCollectionColumn(driver, collection.name, col.value, last_k, next);
+							return this.Dialect.addCollectionColumn(this.driver, collection.name, col.value, last_k, next);
 						});
 					});
 				} else {
-					queue.add(function (next) {
-						return Dialect.addCollectionColumn(driver, collection.name, (col as FxOrmSqlDDLSync__Column.OpResult__CreateColumn).value, last_k, next);
+					queue.add((next) => {
+						return this.Dialect.addCollectionColumn(this.driver, collection.name, (col as FxOrmSqlDDLSync__Column.OpResult__CreateColumn).value, last_k, next);
 					});
 				}
-			} else if (needToSync(collection.properties[k], columns[k])) {
-				var col = createColumn(collection.name, k/* collection.properties[k] */);
+			} else if (this.needToSync(collection.properties[k], columns[k])) {
+				// var col = createColumn(collection.name, k/* collection.properties[k] */);
+				var col = this.createColumn(collection.name, collection.properties[k]);
 
 				if (col === false) {
 					return cb(new Error("Unknown type for property '" + k + "'"));
 				}
 
-				debug("Modifying column " + collection.name + "." + k + ": " + col.value);
+				this.debug("Modifying column " + collection.name + "." + k + ": " + col.value);
 
-				total_changes += 1;
+				this.total_changes += 1;
 
 				if (col.before) {
-					queue.add(col, function (col: FxOrmSqlDDLSync__Column.OpResult__CreateColumn, next) {
-						col.before(driver, function (err) {
+					queue.add(col, (col: FxOrmSqlDDLSync__Column.OpResult__CreateColumn, next) => {
+						col.before(this.driver, (err) => {
 							if (err) {
 								return next(err);
 							}
-							return Dialect.modifyCollectionColumn(driver, collection.name, col.value, next);
+							return this.Dialect.modifyCollectionColumn(this.driver, collection.name, col.value, next);
 						});
 					});
 				} else {
-					queue.add(function (next) {
-						return Dialect.modifyCollectionColumn(driver, collection.name, (col as FxOrmSqlDDLSync__Column.OpResult__CreateColumn).value, next);
+					queue.add((next) => {
+						return this.Dialect.modifyCollectionColumn(this.driver, collection.name, (col as FxOrmSqlDDLSync__Column.OpResult__CreateColumn).value, next);
 					});
 				}
 			}
@@ -190,73 +204,80 @@ export function Sync(options: FxOrmSqlDDLSync.SyncOptions) {
 			last_k = k;
 		}
 
-        if ( !suppressColumnDrop ) {
+        if ( !this.suppressColumnDrop ) {
             for (var k in columns) {
                 if (!collection.properties.hasOwnProperty(k)) {
-                    queue.add(function (next) {
-                        debug("Dropping column " + collection.name + "." + k);
+                    queue.add((next: FxOrmSqlDDLSync.ExecutionCallback<any>) => {
+                        this.debug("Dropping column " + collection.name + "." + k);
 
-                        total_changes += 1;
+                        this.total_changes += 1;
 
-                        return Dialect.dropCollectionColumn(driver, collection.name, k, next);
+                        return this.Dialect.dropCollectionColumn(this.driver, collection.name, k, next);
                     });
                 }
             }
         }
 
-		var indexes = getCollectionIndexes(collection);
+		var indexes = this.getCollectionIndexes(collection);
 
 		if (indexes.length) {
-			queue.add(function (next) {
-				return syncIndexes(collection.name, indexes, next);
+			queue.add((next: FxOrmSqlDDLSync.ExecutionCallback<any>) => {
+				return this.syncIndexes(collection.name, indexes, next);
 			});
 		}
 
 		return queue.check();
 	};
 
-	var getIndexName = function (collection, prop) {
+	private getIndexName (
+		collection: FxOrmSqlDDLSync__Collection.Collection, prop: FxOrmSqlDDLSync__Column.Property
+	) {
 		var post = prop.unique ? 'unique' : 'index';
 
-		if (driver.dialect == 'sqlite') {
+		if (this.driver.dialect == 'sqlite') {
 			return collection.name + '_' + prop.name + '_' + post;
 		} else {
 			return prop.name + '_' + post;
 		}
 	};
 
-	var getCollectionIndexes = function (collection) {
-		var indexes = [];
-		var found, prop;
+	private getCollectionIndexes (
+		collection: FxOrmSqlDDLSync__Collection.Collection
+	): FxOrmSqlDDLSync__DbIndex.DbIndexInfo[] {
+		let indexes: FxOrmSqlDDLSync__DbIndex.DbIndexInfo[] = [];
+		let found: boolean,
+			prop: FxOrmSqlDDLSync__Column.Property;
 
-		for (var k in collection.properties) {
+		for (let k in collection.properties) {
 			prop = collection.properties[k];
 
 			if (prop.unique) {
+				let mixed_arr_unique: (string | true)[] = prop.unique as string[]
 				if (!Array.isArray(prop.unique)) {
-					prop.unique = [ prop.unique ];
+					mixed_arr_unique = [ prop.unique ];
 				}
 
-				for (var i = 0; i < prop.unique.length; i++) {
-					if (prop.unique[i] === true) {
+				for (let i = 0; i < mixed_arr_unique.length; i++) {
+					if (mixed_arr_unique[i] === true) {
 						indexes.push({
-							name    : getIndexName(collection, prop),
+							name    : this.getIndexName(collection, prop),
 							unique  : true,
 							columns : [ k ]
 						});
 					} else {
 						found = false;
 
-						for (var j = 0; j < indexes.length; j++) {
-							if (indexes[j].name == prop.unique[i]) {
+						for (let j = 0; j < indexes.length; j++) {
+							if (indexes[j].name == mixed_arr_unique[i]) {
 								found = true;
 								indexes[j].columns.push(k);
 								break;
 							}
 						}
+
 						if (!found) {
 							indexes.push({
-								name    : prop.unique[i],
+								name    : mixed_arr_unique[i] as string,
 								unique  : true,
 								columns : [ k ]
 							});
@@ -264,22 +285,24 @@ export function Sync(options: FxOrmSqlDDLSync.SyncOptions) {
 					}
 				}
 			}
+			
 			if (prop.index) {
+				let mixed_arr_index: (string | true)[] = prop.index as string[]
 				if (!Array.isArray(prop.index)) {
-					prop.index = [ prop.index ];
+					mixed_arr_index = [ prop.index ];
 				}
 
-				for (var i = 0; i < prop.index.length; i++) {
-					if (prop.index[i] === true) {
+				for (var i = 0; i < mixed_arr_index.length; i++) {
+					if (mixed_arr_index[i] === true) {
 						indexes.push({
-							name    : getIndexName(collection, prop),
+							name    : this.getIndexName(collection, prop),
 							columns : [ k ]
 						});
 					} else {
 						found = false;
 
 						for (var j = 0; j < indexes.length; j++) {
-							if (indexes[j].name == prop.index[i]) {
+							if (indexes[j].name == mixed_arr_index[i]) {
 								found = true;
 								indexes[j].columns.push(k);
 								break;
@@ -287,7 +310,7 @@ export function Sync(options: FxOrmSqlDDLSync.SyncOptions) {
 						}
 						if (!found) {
 							indexes.push({
-								name    : prop.index[i],
+								name    : mixed_arr_index[i] as string,
 								columns : [ k ]
 							});
 						}
@@ -296,53 +319,55 @@ export function Sync(options: FxOrmSqlDDLSync.SyncOptions) {
 			}
 		}
 
-		if (typeof Dialect.convertIndexes == "function") {
-			indexes = Dialect.convertIndexes(collection, indexes);
+		if (typeof this.Dialect.convertIndexes == "function") {
+			indexes = this.Dialect.convertIndexes(collection, indexes);
 		}
 
 		return indexes;
 	};
 
-	var syncIndexes = function (name, indexes, cb) {
+	private syncIndexes (
+		name: string, indexes: FxOrmSqlDDLSync__DbIndex.DbIndexInfo[], cb: FxOrmSqlDDLSync.ExecutionCallback<any>
+	) {
 		if (indexes.length == 0) return cb(null);
 
-		Dialect.getCollectionIndexes(driver, name, function (err, db_indexes) {
+		this.Dialect.getCollectionIndexes(this.driver, name, (err: Error, db_indexes) => {
 			if (err) return cb(err);
 
 			var queue = new Queue(cb);
 
 			for (let i = 0; i < indexes.length; i++) {
 				if (!db_indexes.hasOwnProperty(indexes[i].name)) {
-					debug("Adding index " + name + "." + indexes[i].name + " (" + indexes[i].columns.join(", ") + ")");
+					this.debug("Adding index " + name + "." + indexes[i].name + " (" + indexes[i].columns.join(", ") + ")");
 
-					total_changes += 1;
+					this.total_changes += 1;
 
-					queue.add(indexes[i], function (index, next) {
-						return Dialect.addIndex(driver, index.name, index.unique, name, index.columns, next);
+					queue.add(indexes[i], (index, next) => {
+						return this.Dialect.addIndex(this.driver, index.name, index.unique, name, index.columns, next);
 					});
 					continue;
 				} else if (!db_indexes[indexes[i].name].unique != !indexes[i].unique) {
-					debug("Replacing index " + name + "." + indexes[i].name);
+					this.debug("Replacing index " + name + "." + indexes[i].name);
 
-					total_changes += 1;
+					this.total_changes += 1;
 
-					queue.add(indexes[i], function (index, next) {
-						return Dialect.removeIndex(driver, index.name, name, next);
+					queue.add(indexes[i], (index, next) => {
+						return this.Dialect.removeIndex(this.driver, index.name, name, next);
 					});
-					queue.add(indexes[i], function (index, next) {
-						return Dialect.addIndex(driver, index.name, index.unique, name, index.columns, next);
+					queue.add(indexes[i], (index, next) => {
+						return this.Dialect.addIndex(this.driver, index.name, index.unique, name, index.columns, next);
 					});
 				}
 				delete db_indexes[indexes[i].name];
 			}
 
 			for (let idx in db_indexes) {
-				debug("Removing index " + name + "." + idx);
+				this.debug("Removing index " + name + "." + idx);
 
-				total_changes += 1;
+				this.total_changes += 1;
 
-				queue.add(idx, function (index, next) {
-					return Dialect.removeIndex(driver, index, name, next);
+				queue.add(idx, (index, next) => {
+					return this.Dialect.removeIndex(this.driver, index, name, next);
 				});
 			}
 
@@ -350,15 +375,18 @@ export function Sync(options: FxOrmSqlDDLSync.SyncOptions) {
 		});
 	};
 
-	var needToSync = function (property, column) {
+	private needToSync (
+		property: FxOrmSqlDDLSync__Column.Property,
+		column: FxOrmSqlDDLSync__Column.ColumnInfo
+	): boolean {
 		if (property.serial && property.type == "number") {
 			property.type = "serial";
 		}
 		if (property.type != column.type) {
-			if (typeof Dialect.supportsType != "function") {
+			if (typeof this.Dialect.supportsType != "function") {
 				return true;
 			}
-			if (Dialect.supportsType(property.type) != column.type) {
+			if (this.Dialect.supportsType(property.type) != column.type) {
 				return true;
 			}
 		}
@@ -385,42 +413,40 @@ export function Sync(options: FxOrmSqlDDLSync.SyncOptions) {
 
 		return false;
 	};
+	
+	defineCollection (collection: FxOrmSqlDDLSync__Collection.Collection, properties: FxOrmSqlDDLSync__Collection.Collection['properties']): FxOrmSqlDDLSync.Sync {
+		this.collections.push({
+			name       : collection,
+			properties : properties
+		});
+		return this;
+	}
+	defineType (type: string, proto: FxOrmSqlDDLSync__Driver.CustomPropertyType): FxOrmSqlDDLSync.Sync {
+		this.types[type] = proto;
+		return this;
+	}
+	sync (cb?: FxOrmSqlDDLSync.ExecutionCallback<FxOrmSqlDDLSync.SyncResult>): void {
+		var i = 0;
+		var processNext = () => {
+			if (i >= this.collections.length) {
+				return cb(null, {
+					changes: this.total_changes
+				});
+			}
 
-	return {
-		defineCollection : function (collection, properties) {
-			collections.push({
-				name       : collection,
-				properties : properties
-			});
-			return this;
-		},
-		defineType : function (type, proto) {
-			types[type] = proto;
-			return this;
-		},
-		sync : function (cb) {
-			var i = 0;
-			var processNext = function () {
-				if (i >= collections.length) {
-					return cb(null, {
-						changes : total_changes
-					});
+			var collection = this.collections[i++];
+
+			this.processCollection(collection, (err: Error) => {
+				if (err) {
+					return cb(err);
 				}
 
-				var collection = collections[i++];
+				return processNext();
+			});
+		};
 
-				processCollection(collection, function (err) {
-					if (err) {
-						return cb(err);
-					}
+		this.total_changes = 0;
 
-					return processNext();
-				});
-			};
-
-			total_changes = 0;
-
-			return processNext();
-		}
+		return processNext();
 	}
 }

@@ -23,7 +23,8 @@ describe("index", function () {
 
         it(`dialect ${dialectName} exists`, () => {
           assert.exist(dialect);
-        })
+        });
+        
         ;[
           'hasCollection',
           'addPrimaryKey',

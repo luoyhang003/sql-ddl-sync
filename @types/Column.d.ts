@@ -3,6 +3,15 @@ declare namespace FxOrmSqlDDLSync__Column {
     }
 
     type StringType<ENUM_T = string> = string | ENUM_T
+    type ColumnType = StringType
+
+    interface ColumnInfo {
+        type: ColumnType
+        required: boolean
+        defaultValue?: any
+        size?: number
+        values: any[]
+    }
 
     type PropertyType = StringType<'text' | 'integer' | 'number' | 'serial' | 'boolean' | 'date' | 'binary' | 'object' | 'enum' | 'point'>
 
@@ -62,7 +71,14 @@ declare namespace FxOrmSqlDDLSync__Column {
         big: boolean
         // values for enum type
         values: any[]
+
+        mapsTo: string
+
+        unique?: boolean | string[]
+        index?: boolean | string[]
         /* extra option :end */
+
+        [ext_k: string]: any
     }
 
     interface PropertyMySQL extends Property {

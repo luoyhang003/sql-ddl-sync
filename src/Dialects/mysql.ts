@@ -214,11 +214,15 @@ export const getCollectionIndexes: FxOrmSqlDDLSync__Dialect.Dialect['getCollecti
 	q += "FROM information_schema.statistics ";
 	q += "WHERE table_schema = ? AND table_name = ?";
 
-	driver.execQuery(q, [driver.config.database, name], function (err, rows) {
-		if (err) return cb(err);
+	driver.execQuery(
+		q,
+		[driver.config.database, name],
+		function (err: Error, rows) {
+			if (err) return cb(err);
 
-		return cb(null, convertIndexRows(rows));
-	});
+			return cb(null, convertIndexRows(rows));
+		}
+	);
 };
 
 export const addIndex: FxOrmSqlDDLSync__Dialect.Dialect['addIndex'] = function (
@@ -241,7 +245,9 @@ export const removeIndex: FxOrmSqlDDLSync__Dialect.Dialect['removeIndex'] = func
 	}, driver), cb);
 };
 
-export const getType: FxOrmSqlDDLSync__Dialect.Dialect['getType'] = function (collection, property, driver) {
+export const getType: FxOrmSqlDDLSync__Dialect.Dialect['getType'] = function (
+	collection, property, driver
+) {
 	var type: false | FxOrmSqlDDLSync__Column.ColumnType_MySQL = false;
 	var customType: FxOrmSqlDDLSync__Driver.CustomPropertyType = null;
 
@@ -324,9 +330,9 @@ export const getType: FxOrmSqlDDLSync__Dialect.Dialect['getType'] = function (co
 };
 
 function convertIndexRows(rows: FxOrmSqlDDLSync__Driver.IndexRow_MySQL[]) {
-	var indexes = {};
+	const indexes = {};
 
-	for (var i = 0; i < rows.length; i++) {
+	for (let i = 0; i < rows.length; i++) {
 		if (rows[i].index_name == 'PRIMARY') {
 			continue;
 		}
