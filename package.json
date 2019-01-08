@@ -29,11 +29,11 @@
 	},
 	"analyse": false,
 	"dependencies": {
-		"@fxjs/sql-query": "^0.1.0"
+		"@fxjs/sql-query": "^0.1.1"
 	},
 	"devDependencies": {
 		"@fibjs/ci": "^2.1.0",
-		"@fxjs/orm": "^1.6.10",
+		"@fxjs/orm": "^1.8.1",
 		"@types/fibjs": "^0.26.5",
 		"cross-env": "^5.2.0",
 		"fib-typify": "^0.5.0",
