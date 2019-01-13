@@ -1,7 +1,13 @@
 
-v0.1.1 / 2019-01-09
+v0.1.2 / 2019-01-13
 ==================
 
+  * upgrade.
+
+v0.1.1 / 2019-01-09
+===================
+
+  * Release v0.1.1
   * add types; add `forceSync`; fix some bugs.
   * refactor index.ts
   * make test cases corresponding to real modules.
