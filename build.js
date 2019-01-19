@@ -13,7 +13,7 @@ if (util.buildInfo().fibjs >= '0.26.0') {
 } else {
     fs.copy(
         require.resolve('./lib/index.js'),
-        path.resolve('./lib/index.umd.js')
+        path.resolve('./lib/index.cjs.js')
     )
 }
 
