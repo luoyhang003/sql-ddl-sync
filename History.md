@@ -1,7 +1,14 @@
 
-v0.2.0 / 2019-01-19
+v0.2.1 / 2019-01-19
 ==================
 
+  * fix rolluped bundle's format.
+  * update .npmignore
+
+v0.2.0 / 2019-01-19
+===================
+
+  * Release v0.2.0
   * support delivery umd format script.
   * typo fix.
   * fix test entry.
