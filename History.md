@@ -1,7 +1,15 @@
 
-v0.1.2 / 2019-01-13
+v0.2.0 / 2019-01-19
 ==================
 
+  * support delivery umd format script.
+  * typo fix.
+  * fix test entry.
+
+v0.1.2 / 2019-01-13
+===================
+
+  * Release v0.1.2
   * upgrade.
 
 v0.1.1 / 2019-01-09
