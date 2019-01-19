@@ -30,7 +30,7 @@ ORM.connect(process.env.URI, function (err, db) {
 });
 
 function runTest () {
-	run('./integration/db')
+	require('./integration/db')
 
 	test.run(console.DEBUG)
 }

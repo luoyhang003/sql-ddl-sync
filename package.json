@@ -15,13 +15,14 @@
 	"repository": "http://github.com/fxjs-modules/sql-ddl-sync.git",
 	"types": "@types/index.d.ts",
 	"main": "./lib",
+	"unpkg": "./lib/index.umd.js",
+	"jsdelivr": "./lib/index.umd.js",
 	"scripts": {
-		"build": "fib-typify src -o lib",
+		"build": "fibjs build.js",
 		"test-db": "fibjs test/run-db",
-		"test-db-sqlite": "cross-env URI=sqlite:test.db npm run test-db",
 		"test-db-mysql": "cross-env URI=mysql://root:@localhost:3306/sql-ddl-sync npm run test-db",
-		"test": "fibjs test/run",
-		"ci": "npm run build && npm run test && npm run test-db-sqlite",
+		"test": "fibjs test",
+		"ci": "npm run build && npm run test",
 		"prepublishOnly": "npm run build"
 	},
 	"engines": {
@@ -33,10 +34,12 @@
 	},
 	"devDependencies": {
 		"@fibjs/ci": "^2.1.0",
-		"@fxjs/orm": "^1.8.1",
+		"@fxjs/orm": "^1.8.5",
 		"@types/fibjs": "^0.26.5",
 		"cross-env": "^5.2.0",
+		"fib-rollup": "^0.4.0",
 		"fib-typify": "^0.5.1",
+		"rollup-plugin-commonjs": "^9.2.0",
 		"should": "^13.2.3"
 	},
 	"ci": {

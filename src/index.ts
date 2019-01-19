@@ -3,11 +3,14 @@
 import { Queue } from './Queue';
 import util  = require('util')
 import { syncObject, syncCallback } from './Utils';
+import Dialects = require('./Dialects')
 
 const noOp: Function = () => {};
 
 export function dialect (name: string): FxOrmSqlDDLSync__Dialect.Dialect {
-	return require("./Dialects/" + name);
+	if (!Dialects[name])
+		throw `no dialect with name '${name}'`
+	return Dialects[name];
 }
 
 export class Sync implements FxOrmSqlDDLSync.Sync {
@@ -15,7 +18,7 @@ export class Sync implements FxOrmSqlDDLSync.Sync {
 		options: FxOrmSqlDDLSync.SyncOptions,
 		private debug: Function = options.debug || noOp,
 		private driver: FxOrmSqlDDLSync__Driver.Driver = options.driver,
-		private Dialect: FxOrmSqlDDLSync__Dialect.Dialect = require("./Dialects/" + driver.dialect),
+		private Dialect: FxOrmSqlDDLSync__Dialect.Dialect = dialect(driver.dialect),
 		private suppressColumnDrop = options.suppressColumnDrop,
 		private collections = [],
 		/**
