@@ -15,8 +15,8 @@
 	"repository": "http://github.com/fxjs-modules/sql-ddl-sync.git",
 	"types": "@types/index.d.ts",
 	"main": "./lib",
-	"unpkg": "./lib/index.umd.js",
-	"jsdelivr": "./lib/index.umd.js",
+	"unpkg": "./lib/index.cjs.js",
+	"jsdelivr": "./lib/index.cjs.js",
 	"scripts": {
 		"build": "fibjs build.js",
 		"test-db": "fibjs test/run-db",
@@ -30,7 +30,7 @@
 	},
 	"analyse": false,
 	"dependencies": {
-		"@fxjs/sql-query": "^0.1.3"
+		"@fxjs/sql-query": "^0.1.4"
 	},
 	"devDependencies": {
 		"@fibjs/ci": "^2.1.0",
