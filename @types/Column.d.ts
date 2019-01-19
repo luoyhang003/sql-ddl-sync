@@ -58,8 +58,8 @@ declare namespace FxOrmSqlDDLSync__Column {
 
         mapsTo?: string
 
-        // unique?: boolean | string[]
-        unique?: boolean
+        unique?: boolean | string[]
+        // unique?: boolean
         index?: boolean | string[]
 
         /* extra option :start */
