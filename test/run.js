@@ -11,4 +11,3 @@ if (process.env.URI)
     require('./run-db')
 
 test.run(console.DEBUG)
-process.exit()

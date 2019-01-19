@@ -33,5 +33,4 @@ function runTest () {
 	run('./integration/db')
 
 	test.run(console.DEBUG)
-	process.exit()
 }
