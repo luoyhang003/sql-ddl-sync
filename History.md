@@ -1,7 +1,15 @@
 
-v0.2.1 / 2019-01-19
+v0.2.2 / 2019-02-20
 ==================
 
+  * little fix.
+  * update LICENSE
+  * build fix.
+
+v0.2.1 / 2019-01-19
+===================
+
+  * Release v0.2.1
   * fix rolluped bundle's format.
   * update .npmignore
 
