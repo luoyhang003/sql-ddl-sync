@@ -54,13 +54,12 @@ declare namespace FxOrmSqlDDLSync__Column {
     }
 
     interface Property {
-        type: string
+        type: PropertyType
 
         mapsTo?: string
 
-        unique?: boolean | string[]
-        // unique?: boolean
-        index?: boolean | string[]
+        unique?: boolean | string | string[]
+        index?: boolean | string | string[]
 
         /* extra option :start */
         serial?: boolean
