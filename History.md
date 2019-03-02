@@ -1,7 +1,13 @@
 
-v0.2.2 / 2019-02-20
+v0.3.0 / 2019-03-03
 ==================
 
+  * peer upgrade.
+
+v0.2.2 / 2019-02-20
+===================
+
+  * Release v0.2.2
   * little fix.
   * update LICENSE
   * build fix.
