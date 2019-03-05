@@ -1,12 +1,12 @@
 import util = require('util');
 
-export function syncObject (o: object, method_names: string[], self: any = o) {
+export function syncObject (o: {[k: string]: Function}, method_names: string[], self: any = o) {
     method_names.forEach(m => {
         if (typeof o[m] !== 'function')
             return
 
         const func = o[m]
-        o[m + 'Sync'] = util.sync(func).bind(self)
+        o[`${m}Sync`] = util.sync(func).bind(self)
     })
 }
 

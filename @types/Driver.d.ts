@@ -3,9 +3,9 @@
 
 declare namespace FxOrmSqlDDLSync__Driver {
     interface CustomPropertyType {
-        datastoreType(prop?): string
-        valueToProperty?(value?, prop?)
-        propertyToValue?(value?, prop?)
+        datastoreType(prop?: any): string
+        valueToProperty?(value?: any, prop?: any): any
+        propertyToValue?(value?: any, prop?: any): any
 
         [ext_cfg_name: string]: any
     }
@@ -30,26 +30,26 @@ declare namespace FxOrmSqlDDLSync__Driver {
         /**
          * @description sync table/collection
          */
-        sync
+        sync: any
         
         /**
          * @description drop table/collection
          */
-        drop
+        drop: any
 
         /**
          * @description base query
          */
         execSimpleQuery: {
-            <T = any>(query_string: string, cb: FxOrmSqlDDLSync.ExecutionCallback<T>)
+            <T = any>(query_string: string, cb: FxOrmSqlDDLSync.ExecutionCallback<T>): void
         }
         
         /**
          * @description do query
          */
         execQuery: {
-            <T = any>(query_string: string, cb: FxOrmSqlDDLSync.ExecutionCallback<T>)
-            <T = any>(query_string: string, query_args: object, cb: FxOrmSqlDDLSync.ExecutionCallback<T>)
+            <T = any>(query_string: string, cb: FxOrmSqlDDLSync.ExecutionCallback<T>): void
+            <T = any>(query_string: string, query_args: object, cb: FxOrmSqlDDLSync.ExecutionCallback<T>): void
         }
         
         /**
@@ -57,11 +57,11 @@ declare namespace FxOrmSqlDDLSync__Driver {
          */
         eagerQuery: {
             <T = any>(
-                association,
-                opts,
-                keys,
+                association: any,
+                opts: any,
+                keys: any,
                 cb: FxOrmSqlDDLSync.ExecutionCallback<T>
-            )
+            ): void
         }
 
         customTypes: {

@@ -3,8 +3,8 @@
 import SQL = require("../SQL");
 
 var columnSizes = {
-	integer: { 2: 'SMALLINT', 4: 'INTEGER', 8: 'BIGINT' },
-	floating: { 4: 'FLOAT', 8: 'DOUBLE' }
+	integer: { 2: 'SMALLINT', 4: 'INTEGER', 8: 'BIGINT' } as {[k: string]: string},
+	floating: { 4: 'FLOAT', 8: 'DOUBLE' } as {[k: string]: string}
 };
 
 export const hasCollection: FxOrmSqlDDLSync__Dialect.Dialect['hasCollection'] = function (
@@ -92,7 +92,7 @@ export const getCollectionProperties: FxOrmSqlDDLSync__Dialect.Dialect['getColle
 				case "INT":
 					column.type = "integer";
 					column.size = 4; // INT
-					for (var k in columnSizes.integer) {
+					for (let k in columnSizes.integer) {
 						if (columnSizes.integer[k] == cols[i].Type.toUpperCase()) {
 							column.size = k;
 							break;
@@ -103,7 +103,7 @@ export const getCollectionProperties: FxOrmSqlDDLSync__Dialect.Dialect['getColle
 				case "DOUBLE":
 					column.type = "number";
 					column.rational = true;
-					for (var k in columnSizes.floating) {
+					for (let k in columnSizes.floating) {
 						if (columnSizes.floating[k] == cols[i].Type.toUpperCase()) {
 							column.size = k;
 							break;
@@ -352,7 +352,7 @@ function convertIndexRows(
 	return indexes;
 }
 
-function colInfoBuffer2Str (col) {
+function colInfoBuffer2Str (col: FxOrmSqlDDLSync__Column.PropertyDescriptor__MySQL) {
 	col.Type += '';
 	col.Size += '';
 	col.Extra += '';

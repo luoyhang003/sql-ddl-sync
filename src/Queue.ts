@@ -24,9 +24,10 @@ export class Queue<
 	 * 	the last arg of `add` must be an Function or object callable,
 	 * 	the rest args before the function would become arguments applied to function
 	 */
-	add (arg1: ARG_TYPE, func: FxOrmSqlDDLSync.QueueTypedNextFunction<ARG_TYPE>)
-	add (func: FxOrmSqlDDLSync.QueueTypedNextFunction<ARG_TYPE>)
-	add (...args: any[]) {
+	add (arg1: ARG_TYPE, func: FxOrmSqlDDLSync.QueueTypedNextFunction<ARG_TYPE>): this
+	add (func: FxOrmSqlDDLSync.QueueTypedNextFunction<ARG_TYPE>): this
+	add (...args: any[]): this
+	{
 		if (this.pending == -1) return;
 		this.pending += 1;
 

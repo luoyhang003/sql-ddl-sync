@@ -30,19 +30,19 @@
 	},
 	"analyse": false,
 	"dependencies": {
-		"@fxjs/sql-query": "^0.2.0"
+		"@fxjs/sql-query": "^0.2.1"
 	},
 	"peerDependencies": {
-		"@fxjs/sql-query": "^0.2.0"
+		"@fxjs/sql-query": "^0.2.1"
 	},
 	"devDependencies": {
 		"@fibjs/ci": "^2.1.0",
-		"@fxjs/orm": "^1.8.5",
+		"@fxjs/orm": "^1.8.7",
 		"@types/fibjs": "^0.26.5",
 		"cross-env": "^5.2.0",
 		"fib-rollup": "^0.4.0",
 		"fib-typify": "^0.5.1",
-		"rollup-plugin-commonjs": "^9.2.0",
+		"rollup-plugin-commonjs": "^9.2.1",
 		"should": "^13.2.3"
 	},
 	"ci": {

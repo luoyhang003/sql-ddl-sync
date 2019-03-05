@@ -7,7 +7,7 @@ import Dialects = require('./Dialects')
 
 const noOp: Function = () => {};
 
-export function dialect (name: string): FxOrmSqlDDLSync__Dialect.Dialect {
+export const dialect: FxOrmSqlDDLSync.ExportModule['dialect'] = function (name) {
 	if (!Dialects[name])
 		throw `no dialect with name '${name}'`
 	return Dialects[name];
@@ -20,7 +20,7 @@ export class Sync implements FxOrmSqlDDLSync.Sync {
 		private driver: FxOrmSqlDDLSync__Driver.Driver = options.driver,
 		private Dialect: FxOrmSqlDDLSync__Dialect.Dialect = dialect(driver.dialect),
 		private suppressColumnDrop = options.suppressColumnDrop,
-		private collections = [],
+		private collections: FxOrmSqlDDLSync__Collection.Collection[] = [],
 		/**
 		 * @description customTypes
 		 */
@@ -260,7 +260,7 @@ export class Sync implements FxOrmSqlDDLSync.Sync {
 			type = this.Dialect.getType(collection_name, prop, this.driver);
 		}
 
-		if (type === false)
+		if (!type)
 			return false;
 			
 		if (typeof type == "string") {
@@ -279,11 +279,12 @@ export class Sync implements FxOrmSqlDDLSync.Sync {
 
 	private syncCollection (
 		collection: FxOrmSqlDDLSync__Collection.Collection,
-		columns: FxOrmSqlDDLSync__Column.ColumnInfo[],
+		// columns: FxOrmSqlDDLSync__Column.ColumnInfo[] | FxOrmSqlDDLSync__Column.ColumnInfoHash,
+		columns: FxOrmSqlDDLSync__Column.ColumnInfoHash,
 		cb: FxOrmSqlDDLSync.ExecutionCallback<void>
 	) {
 		const queue   = new Queue(cb);
-		let last_k  = null;
+		let last_k: string  = null;
 
 		this.debug("Synchronizing " + collection.name);
 		
@@ -300,8 +301,9 @@ export class Sync implements FxOrmSqlDDLSync.Sync {
 				this.total_changes += 1;
 
 				if (col.before) {
+					const _before = col.before.bind(col);
 					queue.add(col, (col: FxOrmSqlDDLSync__Column.OpResult__CreateColumn, next) => {
-						col.before(this.driver, (err: Error) => {
+						_before(this.driver, (err: Error) => {
 							if (err) {
 								return next(err);
 							}
@@ -326,8 +328,9 @@ export class Sync implements FxOrmSqlDDLSync.Sync {
 				this.total_changes += 1;
 
 				if (col.before) {
+					const _before = col.before.bind(col);
 					queue.add(col, (col: FxOrmSqlDDLSync__Column.OpResult__CreateColumn, next) => {
-						col.before(this.driver, (err: Error) => {
+						_before(this.driver, (err: Error) => {
 							if (err) {
 								return next(err);
 							}
@@ -345,7 +348,7 @@ export class Sync implements FxOrmSqlDDLSync.Sync {
 		}
 
         if ( !this.suppressColumnDrop ) {
-            for (var k in columns) {
+            for (let k in columns) {
                 if (!collection.properties.hasOwnProperty(k)) {
                     queue.add((next: FxOrmSqlDDLSync.ExecutionCallback<FxOrmSqlDDLSync.SyncResult>) => {
                         this.debug("Dropping column " + collection.name + "." + k);
@@ -442,7 +445,7 @@ export class Sync implements FxOrmSqlDDLSync.Sync {
 					mixed_arr_index = [ prop.index ];
 				}
 
-				for (var i = 0; i < mixed_arr_index.length; i++) {
+				for (let i = 0; i < mixed_arr_index.length; i++) {
 					if (mixed_arr_index[i] === true) {
 						indexes.push({
 							name    : this.getIndexName(collection, prop),

@@ -33,7 +33,7 @@ declare namespace FxOrmSqlDDLSync__Column {
             | 'blob'
             | 'varchar'
         SubType?: string[]
-        Size: number
+        Size: number | string
         /**
          * extra description such as `AUTO_INCREMENT`
          */
@@ -91,6 +91,6 @@ declare namespace FxOrmSqlDDLSync__Column {
 
     interface OpResult__CreateColumn extends FxOrmSqlDDLSync__Dialect.DialectResult {
         value: string
-        before: Function
+        before: false | Function
     }
 }

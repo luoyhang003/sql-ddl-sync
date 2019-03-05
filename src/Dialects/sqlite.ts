@@ -50,7 +50,7 @@ export const getCollectionProperties: FxOrmSqlDDLSync__Dialect.Dialect['getColle
 
 		var columns = <{ [col: string]: FxOrmSqlDDLSync__Column.PropertySQLite }>{}, m;
 
-		for (var i = 0; i < cols.length; i++) {
+		for (let i = 0; i < cols.length; i++) {
 			var column = <FxOrmSqlDDLSync__Column.PropertySQLite>{};
 			var dCol = cols[i];
 
@@ -177,7 +177,7 @@ export const getCollectionIndexes: FxOrmSqlDDLSync__Dialect.Dialect['getCollecti
 			return cb(err, indexes);
 		});
 
-		for (var k in indexes) {
+		for (let k in indexes) {
 			if (k.match(/^sqlite_autoindex/)) {
 				delete indexes[k];
 				continue;
@@ -186,7 +186,7 @@ export const getCollectionIndexes: FxOrmSqlDDLSync__Dialect.Dialect['getCollecti
 				driver.execQuery("PRAGMA index_info(" + driver.query.escapeVal(k) + ")", function (err, rows) {
 					if (err) return next(err);
 
-					for (var i = 0; i < rows.length; i++) {
+					for (let i = 0; i < rows.length; i++) {
 						indexes[k].columns.push(rows[i].name);
 					}
 
@@ -317,7 +317,7 @@ function convertIndexRows(
 ): {[k: string]: FxOrmSqlDDLSync__Driver.DbIndexInfo_SQLite} {
 	var indexes = <{[k: string]: FxOrmSqlDDLSync__Driver.DbIndexInfo_SQLite}>{};
 
-	for (var i = 0; i < rows.length; i++) {
+	for (let i = 0; i < rows.length; i++) {
 		if (!indexes.hasOwnProperty(rows[i].name)) {
 			indexes[rows[i].name] = {
 				columns: [],
