@@ -3,7 +3,7 @@
 
 declare namespace FxOrmSqlDDLSync__Dialect {
     type DialectType = FxSqlQueryDialect.DialectType
-    interface Dialect {
+    interface Dialect extends FxSqlQueryDialect.Dialect {
         hasCollection: {
             (driver: FxOrmSqlDDLSync__Driver.Driver, name: string, cb: FxOrmSqlDDLSync.ExecutionCallback<boolean>): void
         }

@@ -91,6 +91,6 @@ declare namespace FxOrmSqlDDLSync__Column {
 
     interface OpResult__CreateColumn extends FxOrmSqlDDLSync__Dialect.DialectResult {
         value: string
-        before: false | Function
+        before?: false | Function
     }
 }

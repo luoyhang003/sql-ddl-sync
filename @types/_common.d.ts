@@ -13,6 +13,6 @@ declare namespace FxOrmSqlDDLSync {
     }
 
     interface QueueTypedNextFunction<ARG_TYPE=any>{
-        (arg: ARG_TYPE, next: ExecutionCallback<void>)
+        (arg: ARG_TYPE, next: ExecutionCallback<void>): any
     }
 }
