@@ -1,6 +1,8 @@
 import { Queue } from '../Queue';
 import SQL = require("../SQL");
 
+// @see https://www.sqlite.org/lang_altertable.html
+
 export const hasCollection: FxOrmSqlDDLSync__Dialect.Dialect['hasCollection'] = function (
 	driver, name, cb
 ) {
