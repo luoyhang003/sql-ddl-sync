@@ -30,10 +30,10 @@
 	},
 	"analyse": false,
 	"dependencies": {
-		"@fxjs/sql-query": "^0.2.1"
+		"@fxjs/sql-query": "^0.2.2"
 	},
 	"peerDependencies": {
-		"@fxjs/sql-query": "^0.2.1"
+        "@fxjs/sql-query": ">= 0.2.2 < 0.3"
 	},
 	"devDependencies": {
 		"@fibjs/ci": "^2.1.0",
