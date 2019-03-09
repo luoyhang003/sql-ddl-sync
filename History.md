@@ -1,7 +1,13 @@
 
-v0.3.2 / 2019-03-08
+v0.3.3 / 2019-03-09
 ==================
 
+  * upgrade core dependency.
+
+v0.3.2 / 2019-03-08
+===================
+
+  * Release v0.3.2
   * add comment.
   * typo robust.
 
