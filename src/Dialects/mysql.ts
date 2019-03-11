@@ -280,6 +280,9 @@ export const getType: FxOrmSqlDDLSync__Dialect.Dialect['getType'] = function (
 		case "boolean":
 			type = "TINYINT(1)";
 			break;
+		case "datetime":
+			property.type = "date";
+			property.time = true;
 		case "date":
 			if (!property.time) {
 				type = "DATE";
@@ -304,7 +307,7 @@ export const getType: FxOrmSqlDDLSync__Dialect.Dialect['getType'] = function (
 		default:
 			customType = driver.customTypes[property.type];
 			if (customType) {
-				type = customType.datastoreType()
+				type = customType.datastoreType(property, { collection, driver })
 			}
 	}
 

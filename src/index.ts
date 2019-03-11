@@ -2,7 +2,7 @@
 
 import { Queue } from './Queue';
 import util  = require('util')
-import { syncObject, syncCallback } from './Utils';
+import { syncObject, syncCallback, logJson } from './Utils';
 import Dialects = require('./Dialects')
 
 const noOp: Function = () => {};
@@ -216,7 +216,8 @@ export class Sync implements FxOrmSqlDDLSync.Sync {
 			col = this.createColumn(collection.name, prop);
 
 			if (col === false) {
-				return cb(new Error("Unknown type for property '" + k + "'"));
+				logJson('createCollection', prop);
+				return cb(new Error(`Invalid type definition for property '${k}'.`));
 			}
 
 			if (prop.key) {
@@ -289,11 +290,13 @@ export class Sync implements FxOrmSqlDDLSync.Sync {
 		this.debug("Synchronizing " + collection.name);
 		
 		for (let k in collection.properties) {
+			const prop = collection.properties[k];
 			if (!columns.hasOwnProperty(k)) {
-				const col = this.createColumn(collection.name, collection.properties[k]);
+				const col = this.createColumn(collection.name, prop);
 
 				if (col === false) {
-					return cb(new Error("Unknown type for property '" + k + "'"));
+					logJson('syncCollection', prop);
+					return cb(new Error(`Invalid type definition for property '${k}'.`));
 				}
 
 				this.debug("Adding column " + collection.name + "." + k + ": " + col.value);
@@ -315,12 +318,13 @@ export class Sync implements FxOrmSqlDDLSync.Sync {
 						return this.Dialect.addCollectionColumn(this.driver, collection.name, (col as FxOrmSqlDDLSync__Column.OpResult__CreateColumn).value, last_k, next);
 					});
 				}
-			} else if (this.driver.dialect !== 'sqlite' && this.needToSync(collection.properties[k], columns[k])) {
-				// var col = this.createColumn(collection.name, k/* collection.properties[k] */);
-				const col = this.createColumn(collection.name, collection.properties[k]);
+			} else if (this.driver.dialect !== 'sqlite' && this.needToSync(prop, columns[k])) {
+				// var col = this.createColumn(collection.name, k/* prop */);
+				const col = this.createColumn(collection.name, prop);
 
 				if (col === false) {
-					return cb(new Error("Unknown type for property '" + k + "'"));
+					logJson('syncCollection', prop);
+					return cb(new Error(`Invalid type definition for property '${k}'.`));
 				}
 
 				this.debug("Modifying column " + collection.name + "." + k + ": " + col.value);

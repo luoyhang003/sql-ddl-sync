@@ -281,6 +281,9 @@ exports.getType = function (collection, property, driver) {
 			case "boolean":
 				type = "BOOLEAN";
 				break;
+			case "datetime":
+				property.type = "date";
+				property.time = true;
 			case "date":
 				if (!property.time) {
 					type = "DATE";
@@ -322,7 +325,7 @@ exports.getType = function (collection, property, driver) {
 			default:
 				customType = driver.customTypes[property.type];
 				if (customType) {
-					type = customType.datastoreType()
+					type = customType.datastoreType(property)
 				}
 		}
 

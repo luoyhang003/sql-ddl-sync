@@ -30,7 +30,8 @@
 	},
 	"analyse": false,
 	"dependencies": {
-		"@fxjs/sql-query": "^0.2.4"
+		"@fxjs/sql-query": "^0.2.4",
+		"debug": "^4.1.1"
 	},
 	"peerDependencies": {
 		"@fxjs/sql-query": ">= 0.2.4 < 0.3"
@@ -38,6 +39,7 @@
 	"devDependencies": {
 		"@fibjs/ci": "^2.2.0",
 		"@fxjs/orm": "^1.8.8",
+		"@types/debug": "^4.1.2",
 		"@types/fibjs": "^0.26.5",
 		"cross-env": "^5.2.0",
 		"fib-rollup": "^0.4.0",

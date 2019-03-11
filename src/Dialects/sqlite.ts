@@ -264,6 +264,7 @@ export const getType: FxOrmSqlDDLSync__Dialect.Dialect['getType'] = function (
 		case "boolean":
 			type = "INTEGER UNSIGNED";
 			break;
+		case "datetime":
 		case "date":
 			type = "DATETIME";
 			break;
@@ -280,7 +281,7 @@ export const getType: FxOrmSqlDDLSync__Dialect.Dialect['getType'] = function (
 		default:
 			customType = driver.customTypes[property.type];
 			if (customType) {
-				type = customType.datastoreType()
+				type = customType.datastoreType(property, { collection, driver })
 			}
 	}
 

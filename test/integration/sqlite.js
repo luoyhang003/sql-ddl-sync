@@ -38,6 +38,7 @@ describe("SQLite.getType", function () {
 	it("should detect dates", function (done) {
 		Dialect.getType(null, { mapsTo: 'abc', type: "date" }, driver).value.should.equal("DATETIME");
 		Dialect.getType(null, { mapsTo: 'abc', type: "date", time: true }, driver).value.should.equal("DATETIME");
+		Dialect.getType(null, { mapsTo: 'abc', type: "datetime" }, driver).value.should.equal("DATETIME");
 
 		return done();
 	});

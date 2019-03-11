@@ -44,7 +44,8 @@ describe("PostgreSQL.getType", function () {
 
 	it("should detect dates with times", function (done) {
 		Dialect.getType(null, { mapsTo: 'abc', type: "date", time: true }, driver).value.should.equal("TIMESTAMP WITHOUT TIME ZONE");
-
+		Dialect.getType(null, { mapsTo: 'abc', type: "datetime" }, driver).value.should.equal("DATETIME");
+		
 		return done();
 	});
 

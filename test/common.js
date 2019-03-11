@@ -12,8 +12,8 @@ exports.fakeDriver = {
 	},
 	customTypes: {
 		json: {
-			datastoreType: function (prop) {
-				return 'JSON';
+			datastoreType: function (prop, opts) {
+				return prop.type.toUpperCase();
 			}
 		}
 	}

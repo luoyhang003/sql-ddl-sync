@@ -3,7 +3,13 @@
 
 declare namespace FxOrmSqlDDLSync__Driver {
     interface CustomPropertyType {
-        datastoreType(prop?: any): string
+        datastoreType(
+            prop?: FxOrmSqlDDLSync__Column.Property,
+            opts?: {
+                collection: string
+                driver: FxOrmSqlDDLSync__Driver.Driver
+            }
+        ): string
         valueToProperty?(value?: any, prop?: any): any
         propertyToValue?(value?: any, prop?: any): any
 
