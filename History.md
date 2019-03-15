@@ -1,7 +1,14 @@
 
-v0.3.5 / 2019-03-11
+v0.3.6 / 2019-03-16
 ==================
 
+  * peer latest version @fxjs/sql-query
+  * support 'datetime' property type; pass params to driver's property `customType.datastoreType` function; apply 'debug' module.
+
+v0.3.5 / 2019-03-11
+===================
+
+  * Release v0.3.5
   * upgrade core dependency.
 
 v0.3.4 / 2019-03-11
