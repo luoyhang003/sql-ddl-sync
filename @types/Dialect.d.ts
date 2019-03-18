@@ -2,8 +2,8 @@
 /// <reference path="_common.d.ts" />
 
 declare namespace FxOrmSqlDDLSync__Dialect {
-    type DialectType = FxSqlQueryDialect.DialectType
-    interface Dialect extends FxSqlQueryDialect.Dialect {
+    type DialectType = 'mysql' | 'mssql' | 'sqlite' | 'postgresql'
+    interface Dialect {
         hasCollection: {
             (driver: FxOrmSqlDDLSync__Driver.Driver, name: string, cb: FxOrmSqlDDLSync.ExecutionCallback<boolean>): void
         }

@@ -1,4 +1,3 @@
-/// <reference types="@fxjs/sql-query" />
 /// <reference path="_common.d.ts" />
 
 declare namespace FxOrmSqlDDLSync__Driver {
@@ -28,10 +27,15 @@ declare namespace FxOrmSqlDDLSync__Driver {
     /**
      * @description one protocol driver should implement
      */
-    interface Driver {
+    interface BasicDriverQueryObject {
+        escapeVal (...args: any[]): string
+        escapeId (...args: any[]): string
+    }
+    
+    interface Driver<QUERY_TYPE extends BasicDriverQueryObject = any> {
         dialect: FxOrmSqlDDLSync__Dialect.DialectType
         config: DriverConfig
-        query: FxSqlQuery.Class_Query
+        query: QUERY_TYPE
 
         /**
          * @description sync table/collection

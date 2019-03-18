@@ -39,7 +39,7 @@ declare namespace FxOrmSqlDDLSync {
     type SyncInstance = Sync
 
     interface ExportModule {
-        dialect(name: FxSqlQueryDialect.DialectType): FxOrmSqlDDLSync__Dialect.Dialect
+        dialect(name: FxOrmSqlDDLSync__Dialect.DialectType): FxOrmSqlDDLSync__Dialect.Dialect
         Sync: {
             new (options: SyncOptions): Sync
             (options: SyncOptions): Sync
