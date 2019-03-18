@@ -1,7 +1,13 @@
 
-v0.3.7 / 2019-03-18
+v0.3.8 / 2019-03-18
 ==================
 
+  * robust for typo.
+
+v0.3.7 / 2019-03-18
+===================
+
+  * Release v0.3.7
   * recovery test for postgresql in fake driver.
   * remove hard dependency on @fxjs/sql-query, leave suggestive peer declaration to it.
 
