@@ -17,7 +17,7 @@ describe("index", function () {
   });
 
   describe("#dialect", function () {
-    ['mysql', /* 'postgresql', */ 'sqlite'].forEach(function (dialectName) {
+    ['mysql', 'postgresql', 'sqlite'].forEach(function (dialectName) {
       describe("should expose " + dialectName + " dialect", function () {
         var dialect = index.dialect(dialectName);
 

@@ -1,4 +1,4 @@
-var should  = require("should");
+require("should");
 var common  = require("../common");
 var Dialect = require("../../lib/Dialects/postgresql");
 var driver  = common.fakeDriver;
@@ -74,3 +74,7 @@ describe("PostgreSQL.getType", function () {
 		return done();
 	});
 });
+
+if (require.main === module) {
+  test.run(console.DEBUG)
+}
