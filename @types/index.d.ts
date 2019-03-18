@@ -6,11 +6,12 @@
 /// <reference path="DbIndex.d.ts" />
 /// <reference path="Driver.d.ts" />
 /// <reference path="Column.d.ts" />
+/// <reference path="Query.d.ts" />
 /// <reference path="Dialect.d.ts" />
 
 declare namespace FxOrmSqlDDLSync {
-    interface SyncOptions {
-        driver: FxOrmSqlDDLSync__Driver.Driver
+    interface SyncOptions<DRIVER_QUERY_TYPE extends FxOrmSqlDDLSync__Query.BasicDriverQueryObject = any> {
+        driver: FxOrmSqlDDLSync__Driver.Driver<DRIVER_QUERY_TYPE>
         debug?: Function | false
         suppressColumnDrop?: boolean
     }

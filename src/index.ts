@@ -13,11 +13,13 @@ export const dialect: FxOrmSqlDDLSync.ExportModule['dialect'] = function (name) 
 	return Dialects[name];
 }
 
-export class Sync implements FxOrmSqlDDLSync.Sync {
+export class Sync<
+	DRIVER_QUERY_TYPE extends FxOrmSqlDDLSync__Query.BasicDriverQueryObject = any
+> implements FxOrmSqlDDLSync.Sync {
 	constructor (
 		options: FxOrmSqlDDLSync.SyncOptions,
 		private debug: Function = options.debug || noOp,
-		private driver: FxOrmSqlDDLSync__Driver.Driver = options.driver,
+		private driver: FxOrmSqlDDLSync__Driver.Driver<DRIVER_QUERY_TYPE> = options.driver,
 		private Dialect: FxOrmSqlDDLSync__Dialect.Dialect = dialect(driver.dialect),
 		private suppressColumnDrop = options.suppressColumnDrop,
 		private collections: FxOrmSqlDDLSync__Collection.Collection[] = [],

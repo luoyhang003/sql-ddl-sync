@@ -1,12 +1,14 @@
 /// <reference path="_common.d.ts" />
 
 declare namespace FxOrmSqlDDLSync__Driver {
-    interface CustomPropertyType {
+    interface CustomPropertyType<
+        DRIVER_QUERY_TYPE extends FxOrmSqlDDLSync__Query.BasicDriverQueryObject = any
+    > {
         datastoreType(
             prop?: FxOrmSqlDDLSync__Column.Property,
             opts?: {
                 collection: string
-                driver: FxOrmSqlDDLSync__Driver.Driver
+                driver: FxOrmSqlDDLSync__Driver.Driver<DRIVER_QUERY_TYPE>
             }
         ): string
         valueToProperty?(value?: any, prop?: any): any
@@ -26,13 +28,8 @@ declare namespace FxOrmSqlDDLSync__Driver {
     }
     /**
      * @description one protocol driver should implement
-     */
-    interface BasicDriverQueryObject {
-        escapeVal (...args: any[]): string
-        escapeId (...args: any[]): string
-    }
-    
-    interface Driver<QUERY_TYPE extends BasicDriverQueryObject = any> {
+     */    
+    interface Driver<QUERY_TYPE extends FxOrmSqlDDLSync__Query.BasicDriverQueryObject = any> {
         dialect: FxOrmSqlDDLSync__Dialect.DialectType
         config: DriverConfig
         query: QUERY_TYPE
