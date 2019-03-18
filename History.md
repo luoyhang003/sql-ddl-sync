@@ -1,7 +1,14 @@
 
-v0.3.6 / 2019-03-16
+v0.3.7 / 2019-03-18
 ==================
 
+  * recovery test for postgresql in fake driver.
+  * remove hard dependency on @fxjs/sql-query, leave suggestive peer declaration to it.
+
+v0.3.6 / 2019-03-16
+===================
+
+  * Release v0.3.6
   * peer latest version @fxjs/sql-query
   * support 'datetime' property type; pass params to driver's property `customType.datastoreType` function; apply 'debug' module.
 
