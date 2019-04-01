@@ -2,7 +2,7 @@
 
 import { Queue } from './Queue';
 import util  = require('util')
-import { syncObject, syncCallback, logJson } from './Utils';
+import { syncObject, syncifyFunc, logJson } from './Utils';
 import Dialects = require('./Dialects')
 
 const noOp: Function = () => {};
@@ -69,8 +69,8 @@ export class Sync<
 			const collection = this.collections[i++];
 
 			try {
-				syncCallback(
-					this.processCollection as FxOrmSqlDDLSync.NextCallbackWrapper,
+				syncifyFunc(
+					this.processCollection,
 					this
 				)(collection, force_sync)
 			} catch (err) {
@@ -86,13 +86,15 @@ export class Sync<
 	}
 
 	private processCollection (
-		collection: FxOrmSqlDDLSync__Collection.Collection, force_sync: boolean, cb: FxOrmSqlDDLSync.ExecutionCallback<boolean>
+		collection: FxOrmSqlDDLSync__Collection.Collection,
+		force_sync: boolean,
+		cb: FxOrmSqlDDLSync.ExecutionCallback<boolean>
 	) {
 		let has: boolean;
 		let is_processed: boolean = false;
 		try {
-			has = syncCallback(
-				this.Dialect.hasCollection as FxOrmSqlDDLSync.NextCallbackWrapper,
+			has = syncifyFunc(
+				this.Dialect.hasCollection,
 				this.Dialect
 			)(this.driver, collection.name)
 		} catch (err) {
@@ -101,7 +103,7 @@ export class Sync<
 
 		if (!has) {
 			try {
-				syncCallback(
+				syncifyFunc(
 					this.createCollection,
 					this
 				)(collection)
@@ -118,8 +120,8 @@ export class Sync<
 
 		let columns: FxOrmSqlDDLSync__Column.ColumnInfo[] = null
 		try {
-			columns = syncCallback(
-				this.Dialect.getCollectionProperties as FxOrmSqlDDLSync.NextCallbackWrapper,
+			columns = syncifyFunc(
+				this.Dialect.getCollectionProperties,
 				this.Dialect
 			)(this.driver, collection.name)
 		} catch (err) {
@@ -127,8 +129,8 @@ export class Sync<
 		}
 
 		try {
-			syncCallback(
-				this.syncCollection as FxOrmSqlDDLSync.NextCallbackWrapper,
+			syncifyFunc(
+				this.syncCollection,
 				this
 			)(collection, columns)
 		} catch (err) {

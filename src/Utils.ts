@@ -17,7 +17,7 @@ export function syncObject (o: {[k: string]: Function}, method_names: string[], 
     })
 }
 
-export function syncCallback (func: FxOrmSqlDDLSync.NextCallbackWrapper, self: any) {
+export function syncifyFunc (func: FxOrmSqlDDLSync.NextCallbackWrapper, self: any) {
     return util.sync(func).bind(self)
 }
 

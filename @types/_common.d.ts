@@ -3,9 +3,7 @@ declare namespace FxOrmSqlDDLSync {
     type ColumnName = string
 
     interface NextCallbackWrapper<T=any> {
-        (arg1: any, arg2: any, next: FxOrmSqlDDLSync.ExecutionCallback<T>): any
-        (arg1: any, next: FxOrmSqlDDLSync.ExecutionCallback<T>): any
-        (...args: any[]): any
+        (arg1: any, arg2?: any, arg3?: any, cb?: FxOrmSqlDDLSync.ExecutionCallback<T>): void
     }
 
     interface ExecutionCallback<T> {
