@@ -29,20 +29,18 @@
 		"fibjs": "*"
 	},
 	"analyse": false,
-	"dependencies": {
-		"debug": "^4.1.1"
-	},
+	"dependencies": {},
 	"peerDependencies": {
 		"@fxjs/sql-query": ">= 0.2.5 < 0.4"
 	},
 	"devDependencies": {
 		"@fibjs/ci": "^2.2.0",
-		"@fxjs/orm": "^1.9.0",
+		"@fibjs/types": "^0.27.1",
+		"@fxjs/orm": "^1.10.3",
 		"@types/debug": "^4.1.2",
-		"@types/fibjs": "^0.26.5",
 		"cross-env": "^5.2.0",
 		"fib-rollup": "^0.4.0",
-		"fib-typify": "^0.5.1",
+		"fib-typify": "^0.6.0",
 		"rollup-plugin-commonjs": "^9.2.1",
 		"should": "^13.2.3"
 	},
@@ -55,7 +53,8 @@
 			"0.24.0",
 			"0.25.0",
 			"0.26.0",
-			"0.26.1"
+			"0.26.1",
+			"0.27.0"
 		]
 	}
 }

@@ -26,7 +26,11 @@ ORM.connect(process.env.URI, function (err, db) {
 	common.driver = db.driver;
 	common.dialect = db.driver.dialect;
 
-	runTest()
+	runTest();
+
+	db.closeSync();
+
+	process.exit(0);
 });
 
 function runTest () {
